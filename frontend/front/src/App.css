@@ -6,7 +6,7 @@
 }
 
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   background: #f8fafc;
   color: #1a202c;
   line-height: 1.6;
@@ -34,26 +34,26 @@ body {
 
 .btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #C53030 0%, #2B6CB0 100%);
+  background: linear-gradient(135deg, #c53030 0%, #2b6cb0 100%);
   color: white;
 }
 
 .btn-primary:hover {
-  background: linear-gradient(135deg, #B91C1C 0%, #1E40AF 100%);
+  background: linear-gradient(135deg, #b91c1c 0%, #1e40af 100%);
 }
 
 .btn-secondary {
   background: white;
-  color: #C53030;
-  border: 2px solid #C53030;
+  color: #c53030;
+  border: 2px solid #c53030;
 }
 
 .btn-secondary:hover {
-  background: #C53030;
+  background: #c53030;
   color: white;
 }
 
@@ -93,8 +93,12 @@ body {
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Responsive */
@@ -102,7 +106,7 @@ body {
   .container {
     padding: 0 16px;
   }
-  
+
   .btn {
     padding: 10px 20px;
     font-size: 14px;

@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import './Dashboard.css';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import "./Dashboard.css";
 
 const TeacherDashboard = () => {
   const { user, logout } = useAuth();
@@ -11,12 +11,12 @@ const TeacherDashboard = () => {
   const [showProfile, setShowProfile] = useState(false);
   const [editingProfile, setEditingProfile] = useState(false);
   const [profileData, setProfileData] = useState({
-    prenom: user?.prenom || '',
-    nom: user?.nom || '',
-    email: user?.email || '',
-    telephone: user?.telephone || '',
-    departement: user?.departement || '',
-    specialite: user?.specialite || ''
+    prenom: user?.prenom || "",
+    nom: user?.nom || "",
+    email: user?.email || "",
+    telephone: user?.telephone || "",
+    departement: user?.departement || "",
+    specialite: user?.specialite || "",
   });
 
   useEffect(() => {
@@ -27,21 +27,21 @@ const TeacherDashboard = () => {
     // Simulate API call for dashboard data
     setTimeout(() => {
       const data = {
-        title: 'Espace Enseignant',
+        title: "Espace Enseignant",
         stats: [
-          { label: 'Mes cours', value: '4', icon: '📚' },
-          { label: 'Étudiants inscrits', value: '156', icon: '👥' },
-          { label: 'Évaluations en attente', value: '12', icon: '📝' },
-          { label: 'Taux de réussite', value: '87%', icon: '📊' }
+          { label: "Mes cours", value: "4", icon: "📚" },
+          { label: "Étudiants inscrits", value: "156", icon: "👥" },
+          { label: "Évaluations en attente", value: "12", icon: "📝" },
+          { label: "Taux de réussite", value: "87%", icon: "📊" },
         ],
         actions: [
-          { label: 'Gérer mes cours', icon: '📚', action: 'manageCourses' },
-          { label: 'Évaluer étudiants', icon: '📝', action: 'gradeStudents' },
-          { label: 'Emploi du temps', icon: '📅', action: 'viewSchedule' },
-          { label: 'Statistiques', icon: '📊', action: 'statistics' },
-          { label: 'Messagerie', icon: '💬', action: 'messaging' },
-          { label: 'Ressources pédagogiques', icon: '📖', action: 'resources' }
-        ]
+          { label: "Gérer mes cours", icon: "📚", action: "manageCourses" },
+          { label: "Évaluer étudiants", icon: "📝", action: "gradeStudents" },
+          { label: "Emploi du temps", icon: "📅", action: "viewSchedule" },
+          { label: "Statistiques", icon: "📊", action: "statistics" },
+          { label: "Messagerie", icon: "💬", action: "messaging" },
+          { label: "Ressources pédagogiques", icon: "📖", action: "resources" },
+        ],
       };
       setDashboardData(data);
       setLoading(false);
@@ -50,23 +50,23 @@ const TeacherDashboard = () => {
 
   const handleAction = (action) => {
     switch (action) {
-      case 'manageCourses':
-        alert('Ouverture de la gestion des cours...');
+      case "manageCourses":
+        alert("Ouverture de la gestion des cours...");
         break;
-      case 'gradeStudents':
-        alert('Ouverture des évaluations...');
+      case "gradeStudents":
+        alert("Ouverture des évaluations...");
         break;
-      case 'viewSchedule':
-        alert('Ouverture de l\'emploi du temps...');
+      case "viewSchedule":
+        alert("Ouverture de l'emploi du temps...");
         break;
-      case 'statistics':
-        alert('Ouverture des statistiques...');
+      case "statistics":
+        alert("Ouverture des statistiques...");
         break;
-      case 'messaging':
-        alert('Ouverture de la messagerie...');
+      case "messaging":
+        alert("Ouverture de la messagerie...");
         break;
-      case 'resources':
-        alert('Ouverture des ressources pédagogiques...');
+      case "resources":
+        alert("Ouverture des ressources pédagogiques...");
         break;
       default:
         alert(`Action ${action} non implémentée`);
@@ -75,23 +75,23 @@ const TeacherDashboard = () => {
 
   const handleProfileUpdate = async () => {
     if (!profileData.prenom || !profileData.nom || !profileData.email) {
-      alert('Veuillez remplir tous les champs obligatoires');
+      alert("Veuillez remplir tous les champs obligatoires");
       return;
     }
 
     try {
       // Simulate API call to update profile
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      alert('Profil mis à jour avec succès!');
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      alert("Profil mis à jour avec succès!");
       setEditingProfile(false);
     } catch (error) {
-      alert('Erreur lors de la mise à jour du profil');
+      alert("Erreur lors de la mise à jour du profil");
     }
   };
 
   const handleLogout = () => {
     logout();
-    navigate('/');
+    navigate("/");
   };
 
   if (loading) {
@@ -111,7 +111,9 @@ const TeacherDashboard = () => {
             <div className="header-info">
               <h1>{dashboardData?.title}</h1>
               <div className="user-info">
-                <span className="user-name">{user?.prenom} {user?.nom}</span>
+                <span className="user-name">
+                  {user?.prenom} {user?.nom}
+                </span>
                 <span className="user-role">Enseignant</span>
               </div>
             </div>
@@ -141,7 +143,9 @@ const TeacherDashboard = () => {
                   <input
                     type="text"
                     value={profileData.prenom}
-                    onChange={(e) => setProfileData({...profileData, prenom: e.target.value})}
+                    onChange={(e) =>
+                      setProfileData({ ...profileData, prenom: e.target.value })
+                    }
                     required
                   />
                 </div>
@@ -150,7 +154,9 @@ const TeacherDashboard = () => {
                   <input
                     type="text"
                     value={profileData.nom}
-                    onChange={(e) => setProfileData({...profileData, nom: e.target.value})}
+                    onChange={(e) =>
+                      setProfileData({ ...profileData, nom: e.target.value })
+                    }
                     required
                   />
                 </div>
@@ -159,7 +165,9 @@ const TeacherDashboard = () => {
                   <input
                     type="email"
                     value={profileData.email}
-                    onChange={(e) => setProfileData({...profileData, email: e.target.value})}
+                    onChange={(e) =>
+                      setProfileData({ ...profileData, email: e.target.value })
+                    }
                     required
                   />
                 </div>
@@ -168,7 +176,12 @@ const TeacherDashboard = () => {
                   <input
                     type="tel"
                     value={profileData.telephone}
-                    onChange={(e) => setProfileData({...profileData, telephone: e.target.value})}
+                    onChange={(e) =>
+                      setProfileData({
+                        ...profileData,
+                        telephone: e.target.value,
+                      })
+                    }
                   />
                 </div>
                 <div className="form-group">
@@ -176,7 +189,12 @@ const TeacherDashboard = () => {
                   <input
                     type="text"
                     value={profileData.departement}
-                    onChange={(e) => setProfileData({...profileData, departement: e.target.value})}
+                    onChange={(e) =>
+                      setProfileData({
+                        ...profileData,
+                        departement: e.target.value,
+                      })
+                    }
                   />
                 </div>
                 <div className="form-group">
@@ -184,27 +202,58 @@ const TeacherDashboard = () => {
                   <input
                     type="text"
                     value={profileData.specialite}
-                    onChange={(e) => setProfileData({...profileData, specialite: e.target.value})}
+                    onChange={(e) =>
+                      setProfileData({
+                        ...profileData,
+                        specialite: e.target.value,
+                      })
+                    }
                   />
                 </div>
                 <div className="profile-actions">
                   <button onClick={handleProfileUpdate}>Sauvegarder</button>
-                  <button onClick={() => setEditingProfile(false)}>Annuler</button>
+                  <button onClick={() => setEditingProfile(false)}>
+                    Annuler
+                  </button>
                 </div>
               </div>
             ) : (
               <div className="profile-view">
-                <p><strong>Prénom:</strong> {user?.prenom}</p>
-                <p><strong>Nom:</strong> {user?.nom}</p>
-                <p><strong>Email:</strong> {user?.email}</p>
-                <p><strong>Téléphone:</strong> {user?.telephone || 'Non spécifié'}</p>
-                <p><strong>Département:</strong> {user?.departement || 'Non spécifié'}</p>
-                <p><strong>Spécialité:</strong> {user?.specialite || 'Non spécifiée'}</p>
-                <p><strong>Rôle:</strong> Enseignant</p>
-                <button onClick={() => setEditingProfile(true)}>Modifier</button>
+                <p>
+                  <strong>Prénom:</strong> {user?.prenom}
+                </p>
+                <p>
+                  <strong>Nom:</strong> {user?.nom}
+                </p>
+                <p>
+                  <strong>Email:</strong> {user?.email}
+                </p>
+                <p>
+                  <strong>Téléphone:</strong>{" "}
+                  {user?.telephone || "Non spécifié"}
+                </p>
+                <p>
+                  <strong>Département:</strong>{" "}
+                  {user?.departement || "Non spécifié"}
+                </p>
+                <p>
+                  <strong>Spécialité:</strong>{" "}
+                  {user?.specialite || "Non spécifiée"}
+                </p>
+                <p>
+                  <strong>Rôle:</strong> Enseignant
+                </p>
+                <button onClick={() => setEditingProfile(true)}>
+                  Modifier
+                </button>
               </div>
             )}
-            <button className="close-profile" onClick={() => setShowProfile(false)}>×</button>
+            <button
+              className="close-profile"
+              onClick={() => setShowProfile(false)}
+            >
+              ×
+            </button>
           </div>
         </div>
       )}

@@ -10,7 +10,8 @@ html {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
@@ -266,7 +267,11 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(0, 61, 107, 0.6) 0%, rgba(0, 86, 163, 0.5) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(0, 61, 107, 0.6) 0%,
+    rgba(0, 86, 163, 0.5) 100%
+  );
   z-index: 1;
 }
 
@@ -509,7 +514,7 @@ body {
 }
 
 .stat-card::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -644,7 +649,11 @@ body {
 }
 
 @keyframes bounce {
-  0%, 20%, 50%, 80%, 100% {
+  0%,
+  20%,
+  50%,
+  80%,
+  100% {
     transform: translateY(0);
   }
   40% {
@@ -656,7 +665,8 @@ body {
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
     transform: scale(1);
   }
@@ -671,11 +681,11 @@ body {
   .nav-title {
     font-size: 1rem;
   }
-  
+
   .nav-subtitle {
     font-size: 0.8rem;
   }
-  
+
   .about-card {
     grid-template-columns: 200px 1fr;
   }
@@ -686,31 +696,31 @@ body {
   .nav-actions .btn-extranet {
     display: none;
   }
-  
+
   .mobile-menu-btn {
     display: block;
   }
-  
+
   .nav-menu {
     display: none;
     padding: 1rem 0;
   }
-  
+
   .nav-menu.active {
     display: block;
   }
-  
+
   .nav-list {
     flex-direction: column;
     gap: 0;
   }
-  
+
   .nav-link {
     width: 100%;
     justify-content: space-between;
     padding: 1rem;
   }
-  
+
   .dropdown-menu {
     position: static;
     box-shadow: none;
@@ -718,52 +728,52 @@ body {
     border-radius: 0;
     margin-top: 0.5rem;
   }
-  
+
   .dropdown-menu.active {
     display: block;
     opacity: 1;
     visibility: visible;
     transform: none;
   }
-  
+
   .dropdown-item {
     color: white;
     padding-left: 2rem;
     border-bottom-color: rgba(255, 255, 255, 0.1);
   }
-  
+
   .dropdown-item:hover {
     background: rgba(255, 255, 255, 0.1);
   }
-  
+
   .hero-section {
     padding-top: 140px;
   }
-  
+
   .hero-title {
     font-size: 2.5rem;
   }
-  
+
   .hero-subtitle {
     font-size: 1.1rem;
   }
-  
+
   .about-card {
     grid-template-columns: 1fr;
   }
-  
+
   .about-icon {
     padding: 3rem;
   }
-  
+
   .about-content {
     padding: 2rem;
   }
-  
+
   .stats-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .footer-grid {
     grid-template-columns: 1fr;
     gap: 2rem;
@@ -774,59 +784,59 @@ body {
   .nav-container {
     padding: 0 1rem;
   }
-  
+
   .nav-logo-img,
   .nav-logo-fallback {
     width: 50px;
     height: 50px;
   }
-  
+
   .nav-title {
     font-size: 0.9rem;
   }
-  
+
   .nav-subtitle {
     font-size: 0.75rem;
   }
-  
+
   .hero-title {
     font-size: 2rem;
   }
-  
+
   .hero-subtitle {
     font-size: 1rem;
   }
-  
+
   .btn {
     padding: 0.875rem 2rem;
     font-size: 0.9rem;
   }
-  
+
   .cta-buttons {
     flex-direction: column;
     width: 100%;
   }
-  
+
   .btn {
     width: 100%;
   }
-  
+
   .section-title {
     font-size: 2rem;
   }
-  
+
   .about-subtitle {
     font-size: 1.25rem;
   }
-  
+
   .about-text {
     font-size: 1rem;
   }
-  
+
   .stat-number {
     font-size: 3rem;
   }
-  
+
   .stat-icon {
     font-size: 3rem;
   }
@@ -875,7 +885,7 @@ button:focus {
   .footer {
     display: none;
   }
-  
+
   .hero-section {
     min-height: auto;
     page-break-after: always;
@@ -902,7 +912,7 @@ button:focus {
 }
 
 .loading::after {
-  content: '';
+  content: "";
   width: 40px;
   height: 40px;
   border: 4px solid #f3f3f3;
@@ -912,8 +922,12 @@ button:focus {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Utility Classes */
@@ -932,6 +946,5 @@ button:focus {
 .hidden {
   display: none;
 }
-
 
 /* END OF FILE */

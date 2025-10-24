@@ -1,8 +1,8 @@
 /* AdminPanel.css */
 .admin-panel {
   min-height: 100vh;
-  background: linear-gradient(135deg, #2E86AB 0%, #7FC8D5 100%);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #2e86ab 0%, #7fc8d5 100%);
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .admin-header {
@@ -34,7 +34,8 @@
   gap: 1rem;
 }
 
-.back-btn, .logout-btn {
+.back-btn,
+.logout-btn {
   padding: 0.75rem 1.5rem;
   border: none;
   border-radius: 8px;
@@ -45,22 +46,22 @@
 }
 
 .back-btn {
-  background: #7FC8D5;
+  background: #7fc8d5;
   color: white;
 }
 
 .back-btn:hover {
-  background: #2E86AB;
+  background: #2e86ab;
   transform: translateY(-2px);
 }
 
 .logout-btn {
-  background: #F4B400;
+  background: #f4b400;
   color: white;
 }
 
 .logout-btn:hover {
-  background: #2E86AB;
+  background: #2e86ab;
   transform: translateY(-2px);
 }
 
@@ -115,7 +116,7 @@
 
 .add-user-btn {
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #7FC8D5 0%, #2E86AB 100%);
+  background: linear-gradient(135deg, #7fc8d5 0%, #2e86ab 100%);
   color: white;
   border: none;
   border-radius: 8px;
@@ -144,7 +145,7 @@
 }
 
 .users-table thead {
-  background: linear-gradient(135deg, #2E86AB 0%, #7FC8D5 100%);
+  background: linear-gradient(135deg, #2e86ab 0%, #7fc8d5 100%);
   color: white;
 }
 
@@ -201,7 +202,8 @@
   gap: 0.5rem;
 }
 
-.edit-btn, .delete-btn {
+.edit-btn,
+.delete-btn {
   padding: 0.5rem;
   border: none;
   border-radius: 6px;
@@ -211,22 +213,22 @@
 }
 
 .edit-btn {
-  background: #F4B400;
+  background: #f4b400;
   color: white;
 }
 
 .edit-btn:hover {
-  background: #2E86AB;
+  background: #2e86ab;
   transform: scale(1.1);
 }
 
 .delete-btn {
-  background: #2E86AB;
+  background: #2e86ab;
   color: white;
 }
 
 .delete-btn:hover {
-  background: #7FC8D5;
+  background: #7fc8d5;
   transform: scale(1.1);
 }
 
@@ -307,7 +309,8 @@
   margin-top: 1rem;
 }
 
-.save-btn, .cancel-btn {
+.save-btn,
+.cancel-btn {
   padding: 0.75rem 1.5rem;
   border: none;
   border-radius: 8px;
@@ -318,7 +321,7 @@
 }
 
 .save-btn {
-  background: linear-gradient(135deg, #7FC8D5 0%, #2E86AB 100%);
+  background: linear-gradient(135deg, #7fc8d5 0%, #2e86ab 100%);
   color: white;
 }
 
@@ -328,12 +331,12 @@
 }
 
 .cancel-btn {
-  background: #F4B400;
+  background: #f4b400;
   color: white;
 }
 
 .cancel-btn:hover {
-  background: #2E86AB;
+  background: #2e86ab;
   transform: translateY(-2px);
 }
 
@@ -354,7 +357,7 @@
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #2E86AB 0%, #7FC8D5 100%);
+  background: linear-gradient(135deg, #2e86ab 0%, #7fc8d5 100%);
   color: white;
 }
 
@@ -369,8 +372,12 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Responsive Design */

@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import './AdminPanel.css';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import "./AdminPanel.css";
 
 const AdminPanel = () => {
   const { user, logout } = useAuth();
@@ -10,23 +10,23 @@ const AdminPanel = () => {
   const [loading, setLoading] = useState(true);
   const [showAddUser, setShowAddUser] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterRole, setFilterRole] = useState('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterRole, setFilterRole] = useState("all");
 
   // Nouveau formulaire utilisateur
   const [newUser, setNewUser] = useState({
-    prenom: '',
-    nom: '',
-    email: '',
-    telephone: '',
-    departement: '',
-    role: 'etudiant'
+    prenom: "",
+    nom: "",
+    email: "",
+    telephone: "",
+    departement: "",
+    role: "etudiant",
   });
 
   useEffect(() => {
     // Vérifier les permissions
-    if (user?.role !== 'directeur_departement') {
-      navigate('/dashboard');
+    if (user?.role !== "directeur_departement") {
+      navigate("/dashboard");
       return;
     }
 
@@ -42,17 +42,17 @@ const AdminPanel = () => {
     }, 500);
   };
 
-  const filteredUsers = users.filter(user => {
+  const filteredUsers = users.filter((user) => {
     const matchesSearch = `${user.prenom} ${user.nom} ${user.email}`
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
-    const matchesRole = filterRole === 'all' || user.role === filterRole;
+    const matchesRole = filterRole === "all" || user.role === filterRole;
     return matchesSearch && matchesRole;
   });
 
   const handleAddUser = async () => {
     if (!newUser.prenom || !newUser.nom || !newUser.email) {
-      alert('Veuillez remplir tous les champs obligatoires');
+      alert("Veuillez remplir tous les champs obligatoires");
       return;
     }
 
@@ -60,22 +60,22 @@ const AdminPanel = () => {
       // Simulation d'ajout d'utilisateur
       const userToAdd = {
         ...newUser,
-        id: users.length + 1
+        id: users.length + 1,
       };
 
       setUsers([...users, userToAdd]);
       setNewUser({
-        prenom: '',
-        nom: '',
-        email: '',
-        telephone: '',
-        departement: '',
-        role: 'etudiant'
+        prenom: "",
+        nom: "",
+        email: "",
+        telephone: "",
+        departement: "",
+        role: "etudiant",
       });
       setShowAddUser(false);
-      alert('Utilisateur ajouté avec succès!');
+      alert("Utilisateur ajouté avec succès!");
     } catch (error) {
-      alert('Erreur lors de l\'ajout de l\'utilisateur');
+      alert("Erreur lors de l'ajout de l'utilisateur");
     }
   };
 
@@ -85,62 +85,64 @@ const AdminPanel = () => {
       prenom: user.prenom,
       nom: user.nom,
       email: user.email,
-      telephone: user.telephone || '',
-      departement: user.departement || '',
-      role: user.role
+      telephone: user.telephone || "",
+      departement: user.departement || "",
+      role: user.role,
     });
   };
 
   const handleUpdateUser = async () => {
     if (!newUser.prenom || !newUser.nom || !newUser.email) {
-      alert('Veuillez remplir tous les champs obligatoires');
+      alert("Veuillez remplir tous les champs obligatoires");
       return;
     }
 
     try {
       // Simulation de mise à jour
-      const updatedUsers = users.map(u =>
-        u.id === editingUser.id ? { ...u, ...newUser } : u
+      const updatedUsers = users.map((u) =>
+        u.id === editingUser.id ? { ...u, ...newUser } : u,
       );
       setUsers(updatedUsers);
       setEditingUser(null);
       setNewUser({
-        prenom: '',
-        nom: '',
-        email: '',
-        telephone: '',
-        departement: '',
-        role: 'etudiant'
+        prenom: "",
+        nom: "",
+        email: "",
+        telephone: "",
+        departement: "",
+        role: "etudiant",
       });
-      alert('Utilisateur modifié avec succès!');
+      alert("Utilisateur modifié avec succès!");
     } catch (error) {
-      alert('Erreur lors de la modification de l\'utilisateur');
+      alert("Erreur lors de la modification de l'utilisateur");
     }
   };
 
   const handleDeleteUser = async (userId) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) {
+    if (
+      window.confirm("Êtes-vous sûr de vouloir supprimer cet utilisateur ?")
+    ) {
       try {
         // Simulation de suppression
-        setUsers(users.filter(u => u.id !== userId));
-        alert('Utilisateur supprimé avec succès!');
+        setUsers(users.filter((u) => u.id !== userId));
+        alert("Utilisateur supprimé avec succès!");
       } catch (error) {
-        alert('Erreur lors de la suppression de l\'utilisateur');
+        alert("Erreur lors de la suppression de l'utilisateur");
       }
     }
   };
 
   const handleLogout = () => {
     logout();
-    navigate('/');
+    navigate("/");
   };
 
   const getRoleLabel = (role) => {
     const labels = {
-      etudiant: 'Étudiant',
-      enseignant: 'Enseignant',
-      directeur_departement: 'Directeur de Département',
-      administratif: 'Administratif'
+      etudiant: "Étudiant",
+      enseignant: "Enseignant",
+      directeur_departement: "Directeur de Département",
+      administratif: "Administratif",
     };
     return labels[role] || role;
   };
@@ -162,7 +164,7 @@ const AdminPanel = () => {
           <p>Gestion des utilisateurs</p>
         </div>
         <div className="header-right">
-          <button className="back-btn" onClick={() => navigate('/dashboard')}>
+          <button className="back-btn" onClick={() => navigate("/dashboard")}>
             Retour au tableau de bord
           </button>
           <button className="logout-btn" onClick={handleLogout}>
@@ -193,10 +195,7 @@ const AdminPanel = () => {
               <option value="directeur_departement">Directeurs</option>
             </select>
           </div>
-          <button
-            className="add-user-btn"
-            onClick={() => setShowAddUser(true)}
-          >
+          <button className="add-user-btn" onClick={() => setShowAddUser(true)}>
             Ajouter un utilisateur
           </button>
         </div>
@@ -204,7 +203,11 @@ const AdminPanel = () => {
         {(showAddUser || editingUser) && (
           <div className="user-modal">
             <div className="modal-content">
-              <h3>{editingUser ? 'Modifier l\'utilisateur' : 'Ajouter un utilisateur'}</h3>
+              <h3>
+                {editingUser
+                  ? "Modifier l'utilisateur"
+                  : "Ajouter un utilisateur"}
+              </h3>
               <div className="user-form">
                 <div className="form-row">
                   <div className="form-group">
@@ -212,7 +215,9 @@ const AdminPanel = () => {
                     <input
                       type="text"
                       value={newUser.prenom}
-                      onChange={(e) => setNewUser({...newUser, prenom: e.target.value})}
+                      onChange={(e) =>
+                        setNewUser({ ...newUser, prenom: e.target.value })
+                      }
                       required
                     />
                   </div>
@@ -221,7 +226,9 @@ const AdminPanel = () => {
                     <input
                       type="text"
                       value={newUser.nom}
-                      onChange={(e) => setNewUser({...newUser, nom: e.target.value})}
+                      onChange={(e) =>
+                        setNewUser({ ...newUser, nom: e.target.value })
+                      }
                       required
                     />
                   </div>
@@ -231,7 +238,9 @@ const AdminPanel = () => {
                   <input
                     type="email"
                     value={newUser.email}
-                    onChange={(e) => setNewUser({...newUser, email: e.target.value})}
+                    onChange={(e) =>
+                      setNewUser({ ...newUser, email: e.target.value })
+                    }
                     required
                   />
                 </div>
@@ -241,7 +250,9 @@ const AdminPanel = () => {
                     <input
                       type="tel"
                       value={newUser.telephone}
-                      onChange={(e) => setNewUser({...newUser, telephone: e.target.value})}
+                      onChange={(e) =>
+                        setNewUser({ ...newUser, telephone: e.target.value })
+                      }
                     />
                   </div>
                   <div className="form-group">
@@ -249,7 +260,9 @@ const AdminPanel = () => {
                     <input
                       type="text"
                       value={newUser.departement}
-                      onChange={(e) => setNewUser({...newUser, departement: e.target.value})}
+                      onChange={(e) =>
+                        setNewUser({ ...newUser, departement: e.target.value })
+                      }
                     />
                   </div>
                 </div>
@@ -257,12 +270,16 @@ const AdminPanel = () => {
                   <label>Rôle</label>
                   <select
                     value={newUser.role}
-                    onChange={(e) => setNewUser({...newUser, role: e.target.value})}
+                    onChange={(e) =>
+                      setNewUser({ ...newUser, role: e.target.value })
+                    }
                   >
                     <option value="etudiant">Étudiant</option>
                     <option value="enseignant">Enseignant</option>
                     <option value="administratif">Administratif</option>
-                    <option value="directeur_departement">Directeur de Département</option>
+                    <option value="directeur_departement">
+                      Directeur de Département
+                    </option>
                   </select>
                 </div>
                 <div className="form-actions">
@@ -270,19 +287,19 @@ const AdminPanel = () => {
                     onClick={editingUser ? handleUpdateUser : handleAddUser}
                     className="save-btn"
                   >
-                    {editingUser ? 'Modifier' : 'Ajouter'}
+                    {editingUser ? "Modifier" : "Ajouter"}
                   </button>
                   <button
                     onClick={() => {
                       setShowAddUser(false);
                       setEditingUser(null);
                       setNewUser({
-                        prenom: '',
-                        nom: '',
-                        email: '',
-                        telephone: '',
-                        departement: '',
-                        role: 'etudiant'
+                        prenom: "",
+                        nom: "",
+                        email: "",
+                        telephone: "",
+                        departement: "",
+                        role: "etudiant",
                       });
                     }}
                     className="cancel-btn"
@@ -308,12 +325,14 @@ const AdminPanel = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredUsers.map(user => (
+              {filteredUsers.map((user) => (
                 <tr key={user.id}>
-                  <td>{user.prenom} {user.nom}</td>
+                  <td>
+                    {user.prenom} {user.nom}
+                  </td>
                   <td>{user.email}</td>
-                  <td>{user.telephone || '-'}</td>
-                  <td>{user.departement || '-'}</td>
+                  <td>{user.telephone || "-"}</td>
+                  <td>{user.departement || "-"}</td>
                   <td>
                     <span className={`role-badge role-${user.role}`}>
                       {getRoleLabel(user.role)}
