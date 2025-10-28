@@ -11,6 +11,8 @@ import AdministrativeDashboard from './components/AdministrativeDashboard';
 import AdminPanel from './components/AdminPanel';
 import ConfirmEmailPage from './components/ConfirmEmailPage';
 import ChangePasswordPage from './components/ChangePasswordPage';
+import ForgotPasswordPage from './components/ForgotPasswordPage';
+import ResetPasswordPage from './components/ResetPasswordPage';
 import './App.css';
 
 // Protected Route Component
@@ -40,6 +42,9 @@ function App() {
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
             <Route path="/auth/confirm-email" element={<ConfirmEmailPage />} />
             <Route path="/change-password" element={<ChangePasswordPage />} />
             <Route 

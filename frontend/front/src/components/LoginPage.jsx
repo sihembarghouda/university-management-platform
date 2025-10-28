@@ -8,7 +8,6 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const { login, user } = useAuth();
   const navigate = useNavigate();
 
@@ -52,9 +51,7 @@ const LoginPage = () => {
   };
 
   const handleForgotPassword = () => {
-    setShowForgotPassword(true);
-    // Ici on pourrait ouvrir une modal ou naviguer vers une page dédiée
-    alert(`Réinitialisation par email pour: ${email}`);
+    navigate('/forgot-password');
   };
 
   return (
@@ -118,19 +115,6 @@ const LoginPage = () => {
           >
             Mot de passe oublié ?
           </button>
-          
-          {showForgotPassword && (
-            <div className="reset-info">
-              <p>Un email de réinitialisation sera envoyé à : <strong>{email}</strong></p>
-              <button 
-                type="button"
-                className="btn btn-primary btn-small"
-                onClick={() => setShowForgotPassword(false)}
-              >
-                OK
-              </button>
-            </div>
-          )}
         </div>
       </div>
     </div>
