@@ -8,5 +8,6 @@ import { Departement } from './entities/departement.entity';
   imports: [TypeOrmModule.forFeature([Departement])],
   controllers: [DepartementController],
   providers: [DepartementService],
+  exports: [TypeOrmModule], // ✅ export pour que d’autres modules puissent utiliser le repo
 })
 export class DepartementModule {}
