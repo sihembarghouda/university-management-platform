@@ -18,9 +18,13 @@ export class NiveauService {
 
   // ✅ CREATE
   async create(dto: CreateNiveauDto): Promise<Niveau> {
-    const specialite = await this.specialiteRepository.findOneBy({ id: dto.specialiteId });
+    const specialite = await this.specialiteRepository.findOneBy({
+      id: dto.specialiteId,
+    });
     if (!specialite) {
-      throw new NotFoundException(`Spécialité avec ID ${dto.specialiteId} introuvable`);
+      throw new NotFoundException(
+        `Spécialité avec ID ${dto.specialiteId} introuvable`,
+      );
     }
 
     const niveau = this.niveauRepository.create({
@@ -54,9 +58,13 @@ export class NiveauService {
     if (!niveau) throw new NotFoundException(`Niveau ${id} introuvable`);
 
     if (dto.specialiteId) {
-      const specialite = await this.specialiteRepository.findOneBy({ id: dto.specialiteId });
+      const specialite = await this.specialiteRepository.findOneBy({
+        id: dto.specialiteId,
+      });
       if (!specialite)
-        throw new NotFoundException(`Spécialité avec ID ${dto.specialiteId} introuvable`);
+        throw new NotFoundException(
+          `Spécialité avec ID ${dto.specialiteId} introuvable`,
+        );
       niveau.specialite = specialite;
     }
 

@@ -5,6 +5,7 @@ import { ClasseModule } from './classe/classe.module';
 import { NiveauModule } from './niveau/niveau.module';
 import { SpecialiteModule } from './specialite/specialite.module';
 import { DepartementModule } from './departement/departement.module';
+import { EnseignantModule } from './enseignant/enseignant.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { DepartementModule } from './departement/departement.module';
     }),
 
     DepartementModule,
+    EnseignantModule,
     SpecialiteModule,
     NiveauModule,
     ClasseModule,
