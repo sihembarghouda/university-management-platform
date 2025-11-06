@@ -1,17 +1,16 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
-import { ApiProperty } from '@nestjs/swagger';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { Specialite } from '../../specialite/entities/specialite.entity';
 
 @Entity()
 export class Departement {
   @PrimaryGeneratedColumn()
-  @ApiProperty()
   id: number;
 
   @Column()
-  @ApiProperty()
   nom: string;
 
-  @Column({ nullable: true })
-  @ApiProperty({ required: false })
-  description?: string;
+  @OneToMany(() => Specialite, (specialite) => specialite.departement, {
+    cascade: true,
+  })
+  specialites: Specialite[];
 }

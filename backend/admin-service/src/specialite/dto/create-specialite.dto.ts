@@ -1,9 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class CreateClasseDto {
+export class CreateSpecialiteDto {
   @ApiProperty()
   nom: string;
 
   @ApiProperty()
-  niveauId: number; // lien vers le departement
+  departementId: number;
 }

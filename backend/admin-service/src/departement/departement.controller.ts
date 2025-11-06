@@ -3,23 +3,21 @@ import {
   Get,
   Post,
   Body,
+  Patch,
   Param,
   Delete,
-  Put,
 } from '@nestjs/common';
 import { DepartementService } from './departement.service';
 import { CreateDepartementDto } from './dto/create-departement.dto';
 import { UpdateDepartementDto } from './dto/update-departement.dto';
-import { ApiTags } from '@nestjs/swagger';
 
-@ApiTags('departements') // 🏷️ catégorie Swagger
-@Controller('departements')
+@Controller('departement')
 export class DepartementController {
   constructor(private readonly departementService: DepartementService) {}
 
   @Post()
-  create(@Body() dto: CreateDepartementDto) {
-    return this.departementService.create(dto);
+  create(@Body() createDepartementDto: CreateDepartementDto) {
+    return this.departementService.create(createDepartementDto);
   }
 
   @Get()
@@ -32,9 +30,12 @@ export class DepartementController {
     return this.departementService.findOne(+id);
   }
 
-  @Put(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateDepartementDto) {
-    return this.departementService.update(+id, dto);
+  @Patch(':id')
+  update(
+    @Param('id') id: string,
+    @Body() updateDepartementDto: UpdateDepartementDto,
+  ) {
+    return this.departementService.update(+id, updateDepartementDto);
   }
 
   @Delete(':id')

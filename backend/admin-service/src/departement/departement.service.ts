@@ -9,27 +9,28 @@ import { UpdateDepartementDto } from './dto/update-departement.dto';
 export class DepartementService {
   constructor(
     @InjectRepository(Departement)
-    private departementRepository: Repository<Departement>,
+    private repo: Repository<Departement>,
   ) {}
 
   create(dto: CreateDepartementDto) {
-    const dep = this.departementRepository.create(dto);
-    return this.departementRepository.save(dep);
+    const dep = this.repo.create({ nom: dto.nom });
+    return this.repo.save(dep);
   }
 
   findAll() {
-    return this.departementRepository.find();
+    return this.repo.find({ relations: ['specialites'] });
   }
 
   findOne(id: number) {
-    return this.departementRepository.findOneBy({ id });
+    return this.repo.findOne({ where: { id }, relations: ['specialites'] });
   }
 
-  update(id: number, dto: UpdateDepartementDto) {
-    return this.departementRepository.update(id, dto);
+  async update(id: number, dto: UpdateDepartementDto) {
+    await this.repo.update(id, dto);
+    return this.findOne(id);
   }
 
   remove(id: number) {
-    return this.departementRepository.delete(id);
+    return this.repo.delete(id);
   }
 }
