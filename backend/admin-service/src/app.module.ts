@@ -7,6 +7,7 @@ import { SpecialiteModule } from './specialite/specialite.module';
 import { DepartementModule } from './departement/departement.module';
 import { EnseignantModule } from './enseignant/enseignant.module';
 import { EtudiantModule } from './etudiant/etudiant.module';
+import { MatiereModule } from './matiere/matiere.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { EtudiantModule } from './etudiant/etudiant.module';
     NiveauModule,
     ClasseModule,
     EtudiantModule,
+    MatiereModule,
   ],
 })
 export class AppModule {}

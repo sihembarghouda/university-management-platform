@@ -11,6 +11,8 @@ import {
 import { Departement } from '../departement/entities/departement.entity';
 import { Specialite } from '../specialite/entities/specialite.entity';
 import { Classe } from '../classe/entities/classe.entity';
+import { Matiere } from '../matiere/entities/matiere.entity';
+
 //import { Matiere } from '../matiere/matiere.entity';
 
 @Entity()
@@ -51,6 +53,6 @@ export class Enseignant {
   classes: Classe[];
 
   // 🔹 Un enseignant enseigne plusieurs matières
-  //@OneToMany(() => Matiere, (matiere) => matiere.enseignant)
-  //matieres: Matiere[];
+  @ManyToMany(() => Matiere, (matiere) => matiere.enseignants)
+  matieres: Matiere[];
 }

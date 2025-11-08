@@ -11,6 +11,7 @@ import { Departement } from '../../departement/entities/departement.entity';
 import { Niveau } from '../../niveau/entities/niveau.entity';
 import { Classe } from '../../classe/entities/classe.entity';
 import { Enseignant } from '../../enseignant/enseignant.entity';
+import { Matiere } from '../../matiere/entities/matiere.entity';
 @Entity()
 export class Specialite {
   @PrimaryGeneratedColumn()
@@ -33,4 +34,6 @@ export class Specialite {
   // 🔹 Relation inverse pour le ManyToMany avec Enseignant
   @ManyToMany(() => Enseignant, (enseignant) => enseignant.specialites)
   enseignants: Enseignant[];
+  @OneToMany(() => Matiere, (matiere) => matiere.specialite)
+  matieres: Matiere[];
 }
