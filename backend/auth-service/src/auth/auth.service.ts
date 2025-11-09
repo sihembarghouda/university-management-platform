@@ -6,7 +6,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Utilisateur } from 'src/utilisateur/utilisateur.entity/utilisateur.entity';
 import { randomBytes } from 'crypto';
 import { MailerService } from '@nestjs-modules/mailer';
-import { generateEmailVerificationLink, generatePasswordResetLink, ensureFirebaseUser, updateFirebasePassword } from 'src/firebase/firebase.service';
+// import { generateEmailVerificationLink, generatePasswordResetLink, ensureFirebaseUser, updateFirebasePassword } from 'src/firebase/firebase.service';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -149,9 +149,9 @@ export class AuthService {
     user.confirmationToken = token;
     await this.usersRepo.save(user);
     // Ensure user exists in Firebase Auth and generate verification link
-    await ensureFirebaseUser(email, user.cin ?? 'TempPass123!');
+    // await ensureFirebaseUser(email, user.cin ?? 'TempPass123!');
     const continueUrl = `${process.env.FRONTEND_URL ?? 'http://localhost:3000'}/auth/confirm-email?email=${encodeURIComponent(email)}&token=${token}`;
-    const link = await generateEmailVerificationLink(email, continueUrl);
+    const link = continueUrl; // await generateEmailVerificationLink(email, continueUrl);
 
     await this.mailerService.sendMail({
       to: email,
@@ -553,21 +553,21 @@ export class AuthService {
     console.log('🔐 [ResetPassword] New hash generated:', newHash.substring(0, 20) + '...');
     
     user.mdp_hash = newHash;
-    user.resetToken = null;
-    user.resetTokenExpires = null;
+    user.resetToken = null as any;
+    user.resetTokenExpires = null as any;
     user.doit_changer_mdp = false;
     
     await this.usersRepo.save(user);
     console.log('✅ [ResetPassword] Password saved to database');
 
     // Update password in Firebase as well
-    try {
-      await updateFirebasePassword(email, newPassword);
-      console.log('✅ [ResetPassword] Firebase password updated');
-    } catch (err) {
-      // Log and continue; DB password is authoritative
-      console.warn('⚠️ [ResetPassword] Failed to update firebase password', err);
-    }
+    // try {
+    //   await updateFirebasePassword(email, newPassword);
+    //   console.log('✅ [ResetPassword] Firebase password updated');
+    // } catch (err) {
+    //   // Log and continue; DB password is authoritative
+    //   console.warn('⚠️ [ResetPassword] Failed to update firebase password', err);
+    // }
 
     return { message: 'Mot de passe réinitialisé avec succès' };
   }
