@@ -3,6 +3,13 @@
 /node_modules
 /build
 
+# Firebase credentials - NEVER commit these files!
+*firebase-adminsdk*.json
+isett-*.json
+
+# Environment variables
+.env
+
 # Logs
 logs
 *.log
