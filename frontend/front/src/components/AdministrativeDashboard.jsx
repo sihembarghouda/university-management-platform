@@ -1,12 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { LayoutDashboard, Users, BookOpen, Building2, Calendar, UserCheck, FileText, Bell, Settings, Menu, X, TrendingUp, AlertCircle, Plus, Edit, Trash2, Search, Loader } from 'lucide-react';
-import { departementService, enseignantService, etudiantService, classeService, specialiteService, statsService } from '../services/adminServices';
+import { departementService, enseignantService, etudiantService, classeService, statsService } from '../services/adminServices';
+import AddStudentModal from './AddStudentModal';
+import AddTeacherModal from './AddTeacherModal';
+import AddDepartmentModal from './AddDepartmentModal';
+import AddClasseModal from './AddClasseModal';
 
 const AdminDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeMenu, setActiveMenu] = useState('dashboard');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // États pour les modaux
+  const [showAddStudentModal, setShowAddStudentModal] = useState(false);
+  const [showAddTeacherModal, setShowAddTeacherModal] = useState(false);
+  const [showAddDepartmentModal, setShowAddDepartmentModal] = useState(false);
+  const [showAddClasseModal, setShowAddClasseModal] = useState(false);
 
   // États pour les données
   const [stats, setStats] = useState({
@@ -53,25 +63,31 @@ const AdminDashboard = () => {
       setError(null);
       
       // Charger les données directement
-      const [deptsResult, ensResult, etuResult, classesResult] = await Promise.all([
-        departementService.getAll().catch(() => ({ success: false, data: [] })),
+      const [deptsData, ensData, etuData, classesData] = await Promise.all([
+        departementService.getAll().catch(() => []),
         enseignantService.getAll().catch(() => ({ success: false, data: [] })),
         etudiantService.getAll().catch(() => ({ success: false, data: [] })),
-        classeService.getAll().catch(() => ({ success: false, data: [] }))
+        classeService.getAll().catch(() => [])
       ]);
 
+      // Gérer le format { value: [...] } ou tableau direct
+      const deptsArray = Array.isArray(deptsData) ? deptsData : (deptsData.value || deptsData.data || []);
+      const ensArray = ensData.success ? (ensData.data || []) : (Array.isArray(ensData) ? ensData : (ensData.value || []));
+      const etuArray = etuData.success ? (etuData.data || []) : (Array.isArray(etuData) ? etuData : (etuData.value || []));
+      const classesArray = Array.isArray(classesData) ? classesData : (classesData.value || classesData.data || []);
+
       setStats({
-        students: etuResult.success ? (etuResult.data?.length || 0) : 0,
-        teachers: ensResult.success ? (ensResult.data?.length || 0) : 0,
-        departments: deptsResult.success ? (deptsResult.data?.length || 0) : 0,
-        classes: classesResult.success ? (classesResult.data?.length || 0) : 0
+        students: etuArray.length || 0,
+        teachers: ensArray.length || 0,
+        departments: deptsArray.length || 0,
+        classes: classesArray.length || 0
       });
       
       console.log('📊 Statistiques chargées:', {
-        students: etuResult.data?.length || 0,
-        teachers: ensResult.data?.length || 0,
-        departments: deptsResult.data?.length || 0,
-        classes: classesResult.data?.length || 0
+        students: etuArray.length,
+        teachers: ensArray.length,
+        departments: deptsArray.length,
+        classes: classesArray.length
       });
     } catch (err) {
       console.error('❌ Erreur chargement stats:', err);
@@ -131,14 +147,16 @@ const AdminDashboard = () => {
   const loadDepartments = async () => {
     try {
       setLoading(true);
-      const result = await departementService.getAll();
-      if (result.success) {
-        setDepartmentsData(result.data || []);
-      } else {
-        setError(result.message);
-      }
+      setError(null);
+      console.log('🔄 Chargement des départements...');
+      const data = await departementService.getAll();
+      console.log('📥 Résultat départements:', data);
+      // L'API retourne soit un tableau, soit { value: [...] }
+      const departmentsArray = Array.isArray(data) ? data : (data.value || []);
+      setDepartmentsData(departmentsArray);
+      console.log('✅ Départements chargés:', departmentsArray.length);
     } catch (err) {
-      console.error('Erreur chargement départements:', err);
+      console.error('❌ Erreur chargement départements:', err);
       setError('Erreur lors du chargement des départements');
     } finally {
       setLoading(false);
@@ -149,14 +167,16 @@ const AdminDashboard = () => {
   const loadClasses = async () => {
     try {
       setLoading(true);
-      const result = await classeService.getAll();
-      if (result.success) {
-        setClassesData(result.data || []);
-      } else {
-        setError(result.message);
-      }
+      setError(null);
+      console.log('🔄 Chargement des classes...');
+      const data = await classeService.getAll();
+      console.log('📥 Résultat classes:', data);
+      // L'API retourne soit un tableau, soit { value: [...] }
+      const classesArray = Array.isArray(data) ? data : (data.value || []);
+      setClassesData(classesArray);
+      console.log('✅ Classes chargées:', classesArray.length);
     } catch (err) {
-      console.error('Erreur chargement classes:', err);
+      console.error('❌ Erreur chargement classes:', err);
       setError('Erreur lors du chargement des classes');
     } finally {
       setLoading(false);
@@ -384,7 +404,10 @@ const AdminDashboard = () => {
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-2xl font-bold text-gray-800">Gestion des Étudiants</h3>
-        <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+        <button 
+          onClick={() => setShowAddStudentModal(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
           <Plus size={20} />
           Ajouter étudiant
         </button>
@@ -463,7 +486,10 @@ const AdminDashboard = () => {
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-2xl font-bold text-gray-800">Gestion des Enseignants</h3>
-        <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+        <button 
+          onClick={() => setShowAddTeacherModal(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
           <Plus size={20} />
           Ajouter enseignant
         </button>
@@ -544,7 +570,10 @@ const AdminDashboard = () => {
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-2xl font-bold text-gray-800">Gestion des Départements</h3>
-        <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+        <button 
+          onClick={() => setShowAddDepartmentModal(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
           <Plus size={20} />
           Ajouter département
         </button>
@@ -571,8 +600,8 @@ const AdminDashboard = () => {
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <h4 className="text-xl font-bold text-gray-800 mb-2">{dept.nom}</h4>
-                  <p className="text-sm text-gray-600">Code: {dept.code}</p>
-                  <p className="text-sm text-gray-500 mt-2">{dept.description}</p>
+                  <p className="text-sm text-gray-600">ID: {dept.id}</p>
+                  {dept.description && <p className="text-sm text-gray-500 mt-2">{dept.description}</p>}
                 </div>
                 <div className="flex gap-2">
                   <button className="p-2 text-blue-600 hover:bg-blue-50 rounded">
@@ -598,7 +627,10 @@ const AdminDashboard = () => {
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-2xl font-bold text-gray-800">Gestion des Classes</h3>
-        <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+        <button 
+          onClick={() => setShowAddClasseModal(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
           <Plus size={20} />
           Ajouter classe
         </button>
@@ -781,7 +813,7 @@ const AdminDashboard = () => {
       case 'teachers': return renderTeachers();
       case 'departments': return renderDepartments();
       case 'subjects': return renderSubjects();
-      case 'rooms': return renderRooms();
+      // case 'rooms': return renderRooms(); // TODO: À implémenter
       case 'schedules': return renderSchedules();
       case 'reports': return renderReports();
       case 'notifications': return renderNotifications();
@@ -865,6 +897,43 @@ const AdminDashboard = () => {
           {renderContent()}
         </div>
       </main>
+
+      {/* Modaux */}
+      <AddStudentModal 
+        isOpen={showAddStudentModal}
+        onClose={() => setShowAddStudentModal(false)}
+        onStudentAdded={() => {
+          loadStudents();
+          loadDashboardStats();
+        }}
+      />
+
+      <AddTeacherModal 
+        isOpen={showAddTeacherModal}
+        onClose={() => setShowAddTeacherModal(false)}
+        onTeacherAdded={() => {
+          loadTeachers();
+          loadDashboardStats();
+        }}
+      />
+
+      <AddDepartmentModal 
+        isOpen={showAddDepartmentModal}
+        onClose={() => setShowAddDepartmentModal(false)}
+        onDepartmentAdded={() => {
+          loadDepartments();
+          loadDashboardStats();
+        }}
+      />
+
+      <AddClasseModal 
+        isOpen={showAddClasseModal}
+        onClose={() => setShowAddClasseModal(false)}
+        onClasseAdded={() => {
+          loadClasses();
+          loadDashboardStats();
+        }}
+      />
     </div>
   );
 };

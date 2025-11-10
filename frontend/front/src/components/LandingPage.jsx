@@ -118,7 +118,7 @@ const LandingPage = () => {
             <div className="nav-logo-section">
               <Link to="/" className="nav-logo">
                 <img
-                  src="/iset-logo.jpeg"
+                  src="assets/iset-logo.png"
                   alt="Logo ISET Tozeur"
                   className="nav-logo-img"
                   onError={(e) => {

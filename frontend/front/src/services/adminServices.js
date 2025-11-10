@@ -5,37 +5,40 @@ export const departementService = {
   getAll: async () => {
     try {
       const response = await adminApi.get("/departement");
-      return { success: true, data: response.data };
+      return response.data;
     } catch (error) {
-      console.error("Erreur départements:", error);
-      return { success: false, message: error.response?.data?.message || "Erreur de récupération" };
+      console.error("Erreur departementService.getAll:", error);
+      throw error;
     }
   },
 
   getById: async (id) => {
     try {
       const response = await adminApi.get(`/departement/${id}`);
-      return { success: true, data: response.data };
+      return response.data;
     } catch (error) {
-      return { success: false, message: error.response?.data?.message || "Département non trouvé" };
+      console.error("Erreur departementService.getById:", error);
+      throw error;
     }
   },
 
   create: async (data) => {
     try {
       const response = await adminApi.post("/departement", data);
-      return { success: true, data: response.data };
+      return response.data;
     } catch (error) {
-      return { success: false, message: error.response?.data?.message || "Erreur de création" };
+      console.error("Erreur departementService.create:", error);
+      throw error;
     }
   },
 
   update: async (id, data) => {
     try {
       const response = await adminApi.patch(`/departement/${id}`, data);
-      return { success: true, data: response.data };
+      return response.data;
     } catch (error) {
-      return { success: false, message: error.response?.data?.message || "Erreur de mise à jour" };
+      console.error("Erreur departementService.update:", error);
+      throw error;
     }
   },
 
@@ -44,7 +47,8 @@ export const departementService = {
       await adminApi.delete(`/departement/${id}`);
       return { success: true };
     } catch (error) {
-      return { success: false, message: error.response?.data?.message || "Erreur de suppression" };
+      console.error("Erreur departementService.delete:", error);
+      throw error;
     }
   }
 };
@@ -54,36 +58,40 @@ export const classeService = {
   getAll: async () => {
     try {
       const response = await adminApi.get("/classe");
-      return { success: true, data: response.data };
+      return response.data;
     } catch (error) {
-      return { success: false, message: error.response?.data?.message || "Erreur de récupération" };
+      console.error('Erreur classeService.getAll:', error);
+      throw error;
     }
   },
 
   getById: async (id) => {
     try {
       const response = await adminApi.get(`/classe/${id}`);
-      return { success: true, data: response.data };
+      return response.data;
     } catch (error) {
-      return { success: false, message: error.response?.data?.message || "Classe non trouvée" };
+      console.error('Erreur classeService.getById:', error);
+      throw error;
     }
   },
 
   create: async (data) => {
     try {
       const response = await adminApi.post("/classe", data);
-      return { success: true, data: response.data };
+      return response.data;
     } catch (error) {
-      return { success: false, message: error.response?.data?.message || "Erreur de création" };
+      console.error('Erreur classeService.create:', error);
+      throw error;
     }
   },
 
   update: async (id, data) => {
     try {
       const response = await adminApi.patch(`/classe/${id}`, data);
-      return { success: true, data: response.data };
+      return response.data;
     } catch (error) {
-      return { success: false, message: error.response?.data?.message || "Erreur de mise à jour" };
+      console.error('Erreur classeService.update:', error);
+      throw error;
     }
   },
 
@@ -92,7 +100,8 @@ export const classeService = {
       await adminApi.delete(`/classe/${id}`);
       return { success: true };
     } catch (error) {
-      return { success: false, message: error.response?.data?.message || "Erreur de suppression" };
+      console.error('Erreur classeService.delete:', error);
+      throw error;
     }
   }
 };
@@ -162,36 +171,40 @@ export const specialiteService = {
   getAll: async () => {
     try {
       const response = await adminApi.get("/specialite");
-      return { success: true, data: response.data };
+      return response.data;
     } catch (error) {
-      return { success: false, message: error.response?.data?.message || "Erreur de récupération" };
+      console.error("Erreur specialiteService.getAll:", error);
+      throw error;
     }
   },
 
   getById: async (id) => {
     try {
       const response = await adminApi.get(`/specialite/${id}`);
-      return { success: true, data: response.data };
+      return response.data;
     } catch (error) {
-      return { success: false, message: error.response?.data?.message || "Spécialité non trouvée" };
+      console.error("Erreur specialiteService.getById:", error);
+      throw error;
     }
   },
 
   create: async (data) => {
     try {
       const response = await adminApi.post("/specialite", data);
-      return { success: true, data: response.data };
+      return response.data;
     } catch (error) {
-      return { success: false, message: error.response?.data?.message || "Erreur de création" };
+      console.error("Erreur specialiteService.create:", error);
+      throw error;
     }
   },
 
   update: async (id, data) => {
     try {
       const response = await adminApi.patch(`/specialite/${id}`, data);
-      return { success: true, data: response.data };
+      return response.data;
     } catch (error) {
-      return { success: false, message: error.response?.data?.message || "Erreur de mise à jour" };
+      console.error("Erreur specialiteService.update:", error);
+      throw error;
     }
   },
 
@@ -200,7 +213,8 @@ export const specialiteService = {
       await adminApi.delete(`/specialite/${id}`);
       return { success: true };
     } catch (error) {
-      return { success: false, message: error.response?.data?.message || "Erreur de suppression" };
+      console.error("Erreur specialiteService.delete:", error);
+      throw error;
     }
   }
 };
@@ -210,36 +224,40 @@ export const niveauService = {
   getAll: async () => {
     try {
       const response = await adminApi.get("/niveau");
-      return { success: true, data: response.data };
+      return response.data;
     } catch (error) {
-      return { success: false, message: error.response?.data?.message || "Erreur de récupération" };
+      console.error("Erreur niveauService.getAll:", error);
+      throw error;
     }
   },
 
   getById: async (id) => {
     try {
       const response = await adminApi.get(`/niveau/${id}`);
-      return { success: true, data: response.data };
+      return response.data;
     } catch (error) {
-      return { success: false, message: error.response?.data?.message || "Niveau non trouvé" };
+      console.error("Erreur niveauService.getById:", error);
+      throw error;
     }
   },
 
   create: async (data) => {
     try {
       const response = await adminApi.post("/niveau", data);
-      return { success: true, data: response.data };
+      return response.data;
     } catch (error) {
-      return { success: false, message: error.response?.data?.message || "Erreur de création" };
+      console.error("Erreur niveauService.create:", error);
+      throw error;
     }
   },
 
   update: async (id, data) => {
     try {
       const response = await adminApi.patch(`/niveau/${id}`, data);
-      return { success: true, data: response.data };
+      return response.data;
     } catch (error) {
-      return { success: false, message: error.response?.data?.message || "Erreur de mise à jour" };
+      console.error("Erreur niveauService.update:", error);
+      throw error;
     }
   },
 
@@ -248,7 +266,8 @@ export const niveauService = {
       await adminApi.delete(`/niveau/${id}`);
       return { success: true };
     } catch (error) {
-      return { success: false, message: error.response?.data?.message || "Erreur de suppression" };
+      console.error("Erreur niveauService.delete:", error);
+      throw error;
     }
   }
 };
