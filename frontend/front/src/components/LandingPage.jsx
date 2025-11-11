@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Info, Menu, X, ChevronDown } from "lucide-react";
 import "./LandingPage.css";
 import heroVideo from "../assets/1.mp4";
+import isetLogo from "../assets/iset-logo.png";
 
 const LandingPage = () => {
   const [videoError, setVideoError] = useState(false);
@@ -118,7 +119,7 @@ const LandingPage = () => {
             <div className="nav-logo-section">
               <Link to="/" className="nav-logo">
                 <img
-                  src="assets/iset-logo.png"
+                  src={isetLogo}
                   alt="Logo ISET Tozeur"
                   className="nav-logo-img"
                   onError={(e) => {
