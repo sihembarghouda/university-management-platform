@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import PasswordValidator, { usePasswordValidation } from './PasswordValidator';
 
 // Constantes
 const API_BASE_URL = 'http://localhost:3001/api';
@@ -34,6 +35,9 @@ const ResetPasswordPage = () => {
   const [loading, setLoading] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
   const [isButtonHovered, setIsButtonHovered] = useState(false);
+  
+  // Validation du mot de passe
+  const passwordValidation = usePasswordValidation(formData.newPassword);
 
   // Initialisation des paramètres URL
   useEffect(() => {
@@ -65,13 +69,13 @@ const ResetPasswordPage = () => {
   };
 
   const validatePasswords = () => {
-    if (formData.newPassword !== formData.confirmPassword) {
-      setError(MESSAGES.PASSWORD_MISMATCH);
+    if (!passwordValidation.isValid) {
+      setError(passwordValidation.errorMessage);
       return false;
     }
 
-    if (formData.newPassword.length < MIN_PASSWORD_LENGTH) {
-      setError(MESSAGES.PASSWORD_TOO_SHORT);
+    if (formData.newPassword !== formData.confirmPassword) {
+      setError(MESSAGES.PASSWORD_MISMATCH);
       return false;
     }
 
@@ -222,6 +226,7 @@ const ResetPasswordForm = ({
       minLength={MIN_PASSWORD_LENGTH}
       hint={MESSAGES.HINT}
     />
+    <PasswordValidator password={formData.newPassword} showValidation={formData.newPassword.length > 0} />
     <FormField
       id="confirmPassword"
       label="Confirmer le mot de passe"

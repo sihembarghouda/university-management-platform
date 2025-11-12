@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, Users, BookOpen, Building2, Calendar, UserCheck, FileText, Bell, Settings, Menu, X, TrendingUp, AlertCircle, Plus, Edit, Trash2, Search, Loader } from 'lucide-react';
-import { departementService, enseignantService, etudiantService, classeService, statsService } from '../services/adminServices';
+import { LayoutDashboard, Users, BookOpen, Building2, UserCheck, FileText, Bell, Menu, X, TrendingUp, AlertCircle, Plus, Edit, Trash2, Search, Loader, LogOut, User } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { departementService, enseignantService, etudiantService, classeService } from '../services/adminServices';
 import AddStudentModal from './AddStudentModal';
 import AddTeacherModal from './AddTeacherModal';
 import AddDepartmentModal from './AddDepartmentModal';
 import AddClasseModal from './AddClasseModal';
 
 const AdminDashboard = () => {
+  const { user, logout, updateUser } = useAuth();
+  const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeMenu, setActiveMenu] = useState('dashboard');
   const [loading, setLoading] = useState(false);
@@ -30,6 +34,29 @@ const AdminDashboard = () => {
   const [departmentsData, setDepartmentsData] = useState([]);
   const [classesData, setClassesData] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+
+  // États pour le profil
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [profileData, setProfileData] = useState({
+    nom: user?.nom || '',
+    prenom: user?.prenom || '',
+    email: user?.email || '',
+    telephone: user?.telephone || '',
+    role: user?.role || 'Administrateur'
+  });
+
+  // Mettre à jour profileData quand user change
+  useEffect(() => {
+    if (user) {
+      setProfileData({
+        nom: user.nom || '',
+        prenom: user.prenom || '',
+        email: user.email || '',
+        telephone: user.telephone || '',
+        role: user.role || 'Administrateur'
+      });
+    }
+  }, [user]);
 
   // Chargement des statistiques au démarrage
   useEffect(() => {
@@ -236,8 +263,6 @@ const AdminDashboard = () => {
 
   const recentActivities = [
     { type: 'user', message: 'Nouveau étudiant inscrit: Ahmed Ben Ali', time: 'Il y a 5 min' },
-    { type: 'calendar', message: 'Emploi du temps DSI3 modifié', time: 'Il y a 15 min' },
-    { type: 'alert', message: '3 conflits d\'emploi du temps détectés', time: 'Il y a 1h' },
     { type: 'document', message: 'Rapport mensuel généré', time: 'Il y a 2h' }
   ];
 
@@ -247,10 +272,9 @@ const AdminDashboard = () => {
     { id: 'teachers', label: 'Enseignants', icon: UserCheck },
     { id: 'departments', label: 'Départements', icon: Building2 },
     { id: 'subjects', label: 'Classes', icon: BookOpen },
-    { id: 'schedules', label: 'Emplois du temps', icon: Calendar },
     { id: 'reports', label: 'Rapports', icon: FileText },
     { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'settings', label: 'Paramètres', icon: Settings }
+    { id: 'profile', label: 'Mon Profil', icon: User }
   ];
 
   // Filtrer les données selon la recherche
@@ -361,7 +385,6 @@ const AdminDashboard = () => {
               <div key={index} className="flex gap-3 pb-4 border-b border-gray-100 last:border-0">
                 <div className="w-8 h-8 bg-blue-50 rounded-full flex items-center justify-center flex-shrink-0">
                   {activity.type === 'user' && <Users size={16} className="text-blue-600" />}
-                  {activity.type === 'calendar' && <Calendar size={16} className="text-green-600" />}
                   {activity.type === 'alert' && <AlertCircle size={16} className="text-orange-600" />}
                   {activity.type === 'document' && <FileText size={16} className="text-purple-600" />}
                 </div>
@@ -670,24 +693,6 @@ const AdminDashboard = () => {
     </div>
   );
 
-  // Rendu de la page Emplois du temps
-  const renderSchedules = () => (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-2xl font-bold text-gray-800">Gestion des Emplois du temps</h3>
-        <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-          <Plus size={20} />
-          Créer emploi du temps
-        </button>
-      </div>
-      <div className="text-center py-20 text-gray-500">
-        <Calendar size={64} className="mx-auto mb-4 text-gray-300" />
-        <p className="text-lg">Calendrier des emplois du temps</p>
-        <p className="text-sm">Cette fonctionnalité sera disponible prochainement</p>
-      </div>
-    </div>
-  );
-
   // Rendu de la page Rapports
   const renderReports = () => (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -743,7 +748,6 @@ const AdminDashboard = () => {
             <div className="flex gap-4">
               <div className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center flex-shrink-0">
                 {activity.type === 'user' && <Users size={20} className="text-blue-600" />}
-                {activity.type === 'calendar' && <Calendar size={20} className="text-green-600" />}
                 {activity.type === 'alert' && <AlertCircle size={20} className="text-orange-600" />}
                 {activity.type === 'document' && <FileText size={20} className="text-purple-600" />}
               </div>
@@ -759,51 +763,173 @@ const AdminDashboard = () => {
     </div>
   );
 
-  // Rendu de la page Paramètres
-  const renderSettings = () => (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-      <h3 className="text-2xl font-bold text-gray-800 mb-6">Paramètres du système</h3>
-      <div className="space-y-6">
-        <div className="border border-gray-200 rounded-lg p-6">
-          <h4 className="text-lg font-bold text-gray-800 mb-4">Informations de l'établissement</h4>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Nom de l'établissement</label>
-              <input type="text" defaultValue="ISET Tozeur" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+  // Rendu de la page Profil
+  const renderProfile = () => {
+    const handleChange = (e) => {
+      const { name, value } = e.target;
+      setProfileData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleSave = () => {
+      // Mettre à jour le contexte utilisateur
+      const result = updateUser(profileData);
+      
+      if (result.success) {
+        setIsEditingProfile(false);
+        alert('✅ Profil mis à jour avec succès!');
+        console.log('Profil sauvegardé:', profileData);
+      } else {
+        alert('❌ Erreur lors de la mise à jour du profil');
+      }
+    };
+
+    return (
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          {/* En-tête du profil */}
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-8 text-white">
+            <div className="flex items-center gap-6">
+              <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center">
+                <User size={48} className="text-blue-600" />
+              </div>
+              <div>
+                <h2 className="text-3xl font-bold">{user?.prenom} {user?.nom}</h2>
+                <p className="text-blue-100 mt-1">{user?.role || 'Administrateur'}</p>
+                <p className="text-blue-100 text-sm mt-1">{user?.email}</p>
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Adresse email</label>
-              <input type="email" defaultValue="contact@iset-tozeur.tn" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+
+          {/* Contenu du profil */}
+          <div className="p-8">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-bold text-gray-800">Informations personnelles</h3>
+              {!isEditingProfile && (
+                <button
+                  onClick={() => setIsEditingProfile(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <Edit size={18} />
+                  Modifier
+                </button>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Nom</label>
+                <input
+                  type="text"
+                  name="nom"
+                  value={profileData.nom}
+                  onChange={handleChange}
+                  disabled={!isEditingProfile}
+                  className={`w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    !isEditingProfile ? 'bg-gray-50 text-gray-600' : ''
+                  }`}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Prénom</label>
+                <input
+                  type="text"
+                  name="prenom"
+                  value={profileData.prenom}
+                  onChange={handleChange}
+                  disabled={!isEditingProfile}
+                  className={`w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    !isEditingProfile ? 'bg-gray-50 text-gray-600' : ''
+                  }`}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={profileData.email}
+                  onChange={handleChange}
+                  disabled={!isEditingProfile}
+                  className={`w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    !isEditingProfile ? 'bg-gray-50 text-gray-600' : ''
+                  }`}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Téléphone</label>
+                <input
+                  type="tel"
+                  name="telephone"
+                  value={profileData.telephone}
+                  onChange={handleChange}
+                  disabled={!isEditingProfile}
+                  className={`w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    !isEditingProfile ? 'bg-gray-50 text-gray-600' : ''
+                  }`}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Rôle</label>
+                <input
+                  type="text"
+                  name="role"
+                  value={profileData.role}
+                  disabled
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
+                />
+              </div>
+            </div>
+
+            {isEditingProfile && (
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={handleSave}
+                  className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+                >
+                  Enregistrer les modifications
+                </button>
+                <button
+                  onClick={() => {
+                    setIsEditingProfile(false);
+                    setProfileData({
+                      nom: user?.nom || '',
+                      prenom: user?.prenom || '',
+                      email: user?.email || '',
+                      telephone: user?.telephone || '',
+                      role: user?.role || 'Administrateur'
+                    });
+                  }}
+                  className="px-6 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors font-medium"
+                >
+                  Annuler
+                </button>
+              </div>
+            )}
+
+            {/* Bouton de déconnexion */}
+            <div className="mt-8 pt-8 border-t border-gray-200">
+              <button
+                onClick={() => {
+                  if (window.confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
+                    logout();
+                    navigate('/login');
+                  }
+                }}
+                className="flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+              >
+                <LogOut size={18} />
+                Se déconnecter
+              </button>
             </div>
           </div>
         </div>
-
-        <div className="border border-gray-200 rounded-lg p-6">
-          <h4 className="text-lg font-bold text-gray-800 mb-4">Paramètres de notification</h4>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-700">Notifications par email</span>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" defaultChecked className="sr-only peer" />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-              </label>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-700">Notifications push</span>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" defaultChecked className="sr-only peer" />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-              </label>
-            </div>
-          </div>
-        </div>
-
-        <button className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
-          Enregistrer les modifications
-        </button>
       </div>
-    </div>
-  );
+    );
+  };
 
   // Fonction pour rendre le contenu selon le menu actif
   const renderContent = () => {
@@ -813,11 +939,9 @@ const AdminDashboard = () => {
       case 'teachers': return renderTeachers();
       case 'departments': return renderDepartments();
       case 'subjects': return renderSubjects();
-      // case 'rooms': return renderRooms(); // TODO: À implémenter
-      case 'schedules': return renderSchedules();
       case 'reports': return renderReports();
       case 'notifications': return renderNotifications();
-      case 'settings': return renderSettings();
+      case 'profile': return renderProfile();
       default: return renderDashboard();
     }
   };
@@ -851,16 +975,22 @@ const AdminDashboard = () => {
         </nav>
 
         <div className="p-4 border-t border-blue-700">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center font-bold">
-              AD
-            </div>
-            {sidebarOpen && (
-              <div className="flex-1">
-                <p className="text-sm font-medium">Administrateur</p>
-                <p className="text-xs text-blue-300">ISET Tozeur</p>
+          <div className="space-y-3">
+            {/* Profil utilisateur */}
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center font-bold text-sm">
+                {user?.nom ? user.nom.charAt(0).toUpperCase() : 'A'}
+                {user?.prenom ? user.prenom.charAt(0).toUpperCase() : 'D'}
               </div>
-            )}
+              {sidebarOpen && (
+                <div className="flex-1 overflow-hidden">
+                  <p className="text-sm font-medium truncate">
+                    {user?.prenom} {user?.nom}
+                  </p>
+                  <p className="text-xs text-blue-300 truncate">{user?.email}</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </aside>

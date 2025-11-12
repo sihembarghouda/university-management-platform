@@ -219,6 +219,19 @@ export const specialiteService = {
   }
 };
 
+// ==================== SPÉCIALITÉS D'ENSEIGNEMENT ====================
+export const specialiteEnseignementService = {
+  getAll: async () => {
+    try {
+      const response = await adminApi.get("/specialite-enseignement");
+      return response.data;
+    } catch (error) {
+      console.error("Erreur specialiteEnseignementService.getAll:", error);
+      throw error;
+    }
+  }
+};
+
 // ==================== NIVEAUX ====================
 export const niveauService = {
   getAll: async () => {

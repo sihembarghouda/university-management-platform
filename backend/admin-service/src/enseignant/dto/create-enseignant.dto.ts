@@ -4,7 +4,6 @@ import {
   IsString,
   IsEmail,
   IsNumber,
-  IsArray,
 } from 'class-validator';
 
 export class CreateEnseignantDto {
@@ -25,9 +24,6 @@ export class CreateEnseignantDto {
   @IsNumber()
   departementId: number;
 
-  @IsArray()
-  specialiteIds: number[];
-
-  @IsArray()
-  classeIds: number[];
+  @IsNumber()
+  specialiteEnseignementId: number; // UNE SEULE spécialité d'enseignement
 }

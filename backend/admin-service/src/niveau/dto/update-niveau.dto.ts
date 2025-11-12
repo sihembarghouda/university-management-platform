@@ -1,11 +1,7 @@
-import { IsOptional, IsString, IsNumber } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
 export class UpdateNiveauDto {
   @IsString()
   @IsOptional()
   nom?: string;
-
-  @IsNumber()
-  @IsOptional()
-  specialiteId?: number;
 }

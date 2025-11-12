@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Modal from './Modal';
-import { departementService, specialiteService, classeService } from '../services/adminServices';
+import { departementService, specialiteEnseignementService } from '../services/adminServices';
 import { Loader2 } from 'lucide-react';
 
 const AddTeacherModal = ({ isOpen, onClose, onTeacherAdded }) => {
@@ -10,13 +10,11 @@ const AddTeacherModal = ({ isOpen, onClose, onTeacherAdded }) => {
     email: '',
     grade: '',
     departementId: '',
-    specialiteIds: [],
-    classeIds: []
+    specialiteEnseignementId: ''
   });
   
   const [departments, setDepartments] = useState([]);
-  const [specialites, setSpecialites] = useState([]);
-  const [classes, setClasses] = useState([]);
+  const [specialitesEnseignement, setSpecialitesEnseignement] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
   const [errors, setErrors] = useState({});
@@ -32,15 +30,13 @@ const AddTeacherModal = ({ isOpen, onClose, onTeacherAdded }) => {
   const loadData = async () => {
     try {
       setLoadingData(true);
-      const [deptData, specData, classData] = await Promise.all([
+      const [deptData, specEnsData] = await Promise.all([
         departementService.getAll(),
-        specialiteService.getAll(),
-        classeService.getAll()
+        specialiteEnseignementService.getAll()
       ]);
       // L'API retourne un objet avec { value: [...] } au lieu d'un tableau directement
       setDepartments(Array.isArray(deptData) ? deptData : (deptData.value || []));
-      setSpecialites(Array.isArray(specData) ? specData : (specData.value || []));
-      setClasses(Array.isArray(classData) ? classData : (classData.value || []));
+      setSpecialitesEnseignement(Array.isArray(specEnsData) ? specEnsData : (specEnsData.value || []));
     } catch (error) {
       console.error('Erreur lors du chargement des données:', error);
       alert('Erreur lors du chargement des données');
@@ -104,12 +100,8 @@ const AddTeacherModal = ({ isOpen, onClose, onTeacherAdded }) => {
       newErrors.departementId = 'Le département est requis';
     }
     
-    if (formData.specialiteIds.length === 0) {
-      newErrors.specialiteIds = 'Au moins une spécialité est requise';
-    }
-    
-    if (formData.classeIds.length === 0) {
-      newErrors.classeIds = 'Au moins une classe est requise';
+    if (!formData.specialiteEnseignementId) {
+      newErrors.specialiteEnseignementId = 'La spécialité d\'enseignement est requise';
     }
     
     setErrors(newErrors);
@@ -131,8 +123,7 @@ const AddTeacherModal = ({ isOpen, onClose, onTeacherAdded }) => {
       const dataToSend = {
         ...formData,
         departementId: parseInt(formData.departementId),
-        specialiteIds: formData.specialiteIds,
-        classeIds: formData.classeIds
+        specialiteEnseignementId: parseInt(formData.specialiteEnseignementId)
       };
       
       console.log('Envoi des données:', dataToSend);
@@ -147,8 +138,7 @@ const AddTeacherModal = ({ isOpen, onClose, onTeacherAdded }) => {
         email: '',
         grade: '',
         departementId: '',
-        specialiteIds: [],
-        classeIds: []
+        specialiteEnseignementId: ''
       });
       
       // Notify parent component
@@ -273,8 +263,8 @@ const AddTeacherModal = ({ isOpen, onClose, onTeacherAdded }) => {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Spécialités <span className="text-red-500">*</span>
-            <span className="text-xs text-gray-500 ml-2">(Maintenez Ctrl pour sélectionner plusieurs)</span>
+            Spécialité d'Enseignement <span className="text-red-500">*</span>
+            <span className="text-xs text-gray-500 ml-2">(Matière enseignée)</span>
           </label>
           {loadingData ? (
             <div className="flex items-center justify-center py-4">
@@ -282,51 +272,29 @@ const AddTeacherModal = ({ isOpen, onClose, onTeacherAdded }) => {
             </div>
           ) : (
             <select
-              multiple
-              size="4"
-              value={formData.specialiteIds}
-              onChange={(e) => handleMultiSelect(e, 'specialiteIds')}
+              name="specialiteEnseignementId"
+              value={formData.specialiteEnseignementId}
+              onChange={handleChange}
               className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                errors.specialiteIds ? 'border-red-500' : 'border-gray-300'
+                errors.specialiteEnseignementId ? 'border-red-500' : 'border-gray-300'
               }`}
             >
-              {specialites.map(spec => (
-                <option key={spec.id} value={spec.id}>
-                  {spec.nom}
-                </option>
+              <option value="">Sélectionnez une spécialité d'enseignement</option>
+              {/* Group by domaine */}
+              {[...new Set(specialitesEnseignement.map(s => s.domaine))].map(domaine => (
+                <optgroup key={domaine} label={domaine || 'Autre'}>
+                  {specialitesEnseignement
+                    .filter(s => s.domaine === domaine)
+                    .map(spec => (
+                      <option key={spec.id} value={spec.id}>
+                        {spec.nom}
+                      </option>
+                    ))}
+                </optgroup>
               ))}
             </select>
           )}
-          {errors.specialiteIds && <p className="text-red-500 text-sm mt-1">{errors.specialiteIds}</p>}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Classes <span className="text-red-500">*</span>
-            <span className="text-xs text-gray-500 ml-2">(Maintenez Ctrl pour sélectionner plusieurs)</span>
-          </label>
-          {loadingData ? (
-            <div className="flex items-center justify-center py-4">
-              <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
-            </div>
-          ) : (
-            <select
-              multiple
-              size="4"
-              value={formData.classeIds}
-              onChange={(e) => handleMultiSelect(e, 'classeIds')}
-              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                errors.classeIds ? 'border-red-500' : 'border-gray-300'
-              }`}
-            >
-              {classes.map(classe => (
-                <option key={classe.id} value={classe.id}>
-                  {classe.nom} - {classe.niveau?.nom || 'N/A'} - {classe.specialite?.nom || 'N/A'}
-                </option>
-              ))}
-            </select>
-          )}
-          {errors.classeIds && <p className="text-red-500 text-sm mt-1">{errors.classeIds}</p>}
+          {errors.specialiteEnseignementId && <p className="text-red-500 text-sm mt-1">{errors.specialiteEnseignementId}</p>}
         </div>
 
         <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">

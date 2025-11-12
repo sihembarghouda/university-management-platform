@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import PasswordValidator, { usePasswordValidation } from "./PasswordValidator";
 
 // Constantes pour les messages
 const MESSAGES = {
@@ -40,6 +41,9 @@ const ChangePasswordPage = () => {
   const [loading, setLoading] = useState(false);
   const [isButtonHovered, setIsButtonHovered] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
+  
+  // Validation du mot de passe
+  const passwordValidation = usePasswordValidation(formData.newPassword);
 
   // Gestionnaires d'événements
   const handleInputChange = (field) => (e) => {
@@ -63,6 +67,13 @@ const ChangePasswordPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     resetMessages();
+    
+    // Vérifier la validation du mot de passe
+    if (!passwordValidation.isValid) {
+      setError(passwordValidation.errorMessage);
+      return;
+    }
+    
     setLoading(true);
 
     try {
@@ -85,7 +96,7 @@ const ChangePasswordPage = () => {
     }
   };
 
-  const isFormValid = formData.currentPassword && formData.newPassword;
+  const isFormValid = formData.currentPassword && formData.newPassword && passwordValidation.isValid;
   const isButtonDisabled = loading || !isFormValid;
 
   return (
@@ -197,6 +208,7 @@ const PasswordForm = ({
       required
       hint={MESSAGES.HINT}
     />
+    <PasswordValidator password={formData.newPassword} showValidation={formData.newPassword.length > 0} />
     <SubmitButton
       loading={loading}
       disabled={isButtonDisabled}

@@ -9,6 +9,7 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { generateEmailVerificationLink, generatePasswordResetLink, ensureFirebaseUser, updateFirebasePassword } from 'src/firebase/firebase.service';
 import * as fs from 'fs';
 import * as path from 'path';
+import { validatePassword } from './password-validator';
 
 
 const BCRYPT_ROUNDS = Number(process.env.BCRYPT_ROUNDS || 12);
@@ -89,6 +90,12 @@ export class AuthService {
 
     const ok = await this.compare(currentPassword, user.mdp_hash);
     if (!ok) throw new UnauthorizedException('Mot de passe actuel incorrect');
+
+    // Valider le nouveau mot de passe
+    const validation = validatePassword(newPassword);
+    if (!validation.isValid) {
+      throw new BadRequestException(validation.errors.join(', '));
+    }
 
     user.mdp_hash = await this.hash(newPassword);
     user.doit_changer_mdp = false;
@@ -248,12 +255,23 @@ export class AuthService {
 
   async resetPassword(email: string, token: string, newPassword: string) {
     console.log('🔐 [ResetPassword] Started for email:', email);
-    console.log('🔐 [ResetPassword] Token:', token);
+    console.log('🔐 [ResetPassword] Token received:', token);
+    console.log('🔐 [ResetPassword] Token length:', token?.length);
     
     const user = await this.usersRepo.findOne({ where: { email, resetToken: token } });
     
     if (!user) {
       console.log('❌ [ResetPassword] User not found or token mismatch');
+      // Try to find user by email only to check if token matches
+      const userByEmail = await this.usersRepo.findOne({ where: { email } });
+      if (userByEmail) {
+        console.log('🔍 [ResetPassword] User exists but token mismatch');
+        console.log('🔍 [ResetPassword] Stored token:', userByEmail.resetToken);
+        console.log('🔍 [ResetPassword] Token expires:', userByEmail.resetTokenExpires);
+        console.log('🔍 [ResetPassword] Current time:', new Date());
+      } else {
+        console.log('🔍 [ResetPassword] User with this email does not exist');
+      }
       throw new BadRequestException('Token invalide ou expiré');
     }
 
@@ -263,6 +281,13 @@ export class AuthService {
     if (!user.resetTokenExpires || user.resetTokenExpires < new Date()) {
       console.log('❌ [ResetPassword] Token expired');
       throw new BadRequestException('Le token a expiré');
+    }
+
+    // Valider le nouveau mot de passe
+    const validation = validatePassword(newPassword);
+    if (!validation.isValid) {
+      console.log('❌ [ResetPassword] Password validation failed:', validation.errors);
+      throw new BadRequestException(validation.errors.join(', '));
     }
 
     console.log('🔐 [ResetPassword] Hashing new password...');

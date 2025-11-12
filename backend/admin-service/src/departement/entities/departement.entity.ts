@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, BeforeInsert, BeforeUpdate } from 'typeorm';
 import { Specialite } from '../../specialite/entities/specialite.entity';
 import { Enseignant } from '../../enseignant/enseignant.entity';
 
@@ -7,8 +7,21 @@ export class Departement {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ unique: true, nullable: false })
   nom: string;
+
+  @Column({ nullable: true, type: 'text' })
+  description: string;
+
+  // Validation avant insertion/mise à jour
+  @BeforeInsert()
+  @BeforeUpdate()
+  validateNom() {
+    if (this.nom) this.nom = this.nom.trim();
+    if (!this.nom) {
+      throw new Error('Le nom du département est obligatoire');
+    }
+  }
 
   @OneToMany(() => Specialite, (specialite) => specialite.departement, {
     cascade: true,

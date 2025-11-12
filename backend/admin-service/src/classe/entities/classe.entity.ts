@@ -4,12 +4,12 @@ import {
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
-  ManyToMany,
   OneToMany,
+  BeforeInsert,
+  BeforeUpdate,
 } from 'typeorm';
 import { Niveau } from '../../niveau/entities/niveau.entity';
 import { Specialite } from '../../specialite/entities/specialite.entity';
-import { Enseignant } from '../../enseignant/enseignant.entity';
 import { Etudiant } from '../../etudiant/entities/etudiant.entity';
 
 @Entity()
@@ -17,8 +17,18 @@ export class Classe {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ unique: true, nullable: false })
   nom: string;
+
+  // Validation avant insertion/mise à jour
+  @BeforeInsert()
+  @BeforeUpdate()
+  validateNom() {
+    if (this.nom) this.nom = this.nom.trim();
+    if (!this.nom) {
+      throw new Error('Le nom de la classe est obligatoire');
+    }
+  }
 
   @ManyToOne(() => Niveau, (niveau) => niveau.classes, {
     onDelete: 'CASCADE',
@@ -30,9 +40,8 @@ export class Classe {
   })
   specialite: Specialite;
 
-  // 🔹 Relation inverse pour le ManyToMany avec Enseignant
-  @ManyToMany(() => Enseignant, (enseignant) => enseignant.classes)
-  enseignants: Enseignant[];
+  // ❌ RETIRÉ: enseignants - Les classes changent chaque année, géré via emploi du temps
+  
   @OneToMany(() => Etudiant, (etudiant) => etudiant.classe)
   etudiants: Etudiant[];
 }

@@ -5,7 +5,6 @@ import { Loader2 } from 'lucide-react';
 
 const AddClasseModal = ({ isOpen, onClose, onClasseAdded }) => {
   const [formData, setFormData] = useState({
-    nom: '',
     niveauId: '',
     specialiteId: ''
   });
@@ -55,10 +54,6 @@ const AddClasseModal = ({ isOpen, onClose, onClasseAdded }) => {
   const validateForm = () => {
     const newErrors = {};
     
-    if (!formData.nom.trim()) {
-      newErrors.nom = 'Le nom de la classe est requis';
-    }
-    
     if (!formData.niveauId) {
       newErrors.niveauId = 'Le niveau est requis';
     }
@@ -96,7 +91,6 @@ const AddClasseModal = ({ isOpen, onClose, onClasseAdded }) => {
       
       // Reset form
       setFormData({
-        nom: '',
         niveauId: '',
         specialiteId: ''
       });
@@ -118,23 +112,6 @@ const AddClasseModal = ({ isOpen, onClose, onClasseAdded }) => {
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Ajouter une Classe">
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Nom de la Classe <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            name="nom"
-            value={formData.nom}
-            onChange={handleChange}
-            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-              errors.nom ? 'border-red-500' : 'border-gray-300'
-            }`}
-            placeholder="Ex: L1-INFO-A, M2-MATH-B..."
-          />
-          {errors.nom && <p className="text-red-500 text-sm mt-1">{errors.nom}</p>}
-        </div>
-
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Niveau <span className="text-red-500">*</span>

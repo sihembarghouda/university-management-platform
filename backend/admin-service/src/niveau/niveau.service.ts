@@ -18,18 +18,8 @@ export class NiveauService {
 
   // ✅ CREATE
   async create(dto: CreateNiveauDto): Promise<Niveau> {
-    const specialite = await this.specialiteRepository.findOneBy({
-      id: dto.specialiteId,
-    });
-    if (!specialite) {
-      throw new NotFoundException(
-        `Spécialité avec ID ${dto.specialiteId} introuvable`,
-      );
-    }
-
     const niveau = this.niveauRepository.create({
       nom: dto.nom,
-      specialite,
     });
 
     return this.niveauRepository.save(niveau);
@@ -38,7 +28,7 @@ export class NiveauService {
   // ✅ FIND ALL
   async findAll(): Promise<Niveau[]> {
     return this.niveauRepository.find({
-      relations: ['specialite', 'specialite.departement'],
+      relations: ['specialites', 'specialites.departement'],
     });
   }
 
@@ -46,7 +36,7 @@ export class NiveauService {
   async findOne(id: number): Promise<Niveau> {
     const niveau = await this.niveauRepository.findOne({
       where: { id },
-      relations: ['specialite', 'specialite.departement'],
+      relations: ['specialites', 'specialites.departement'],
     });
     if (!niveau) throw new NotFoundException(`Niveau ${id} introuvable`);
     return niveau;
@@ -56,17 +46,6 @@ export class NiveauService {
   async update(id: number, dto: UpdateNiveauDto): Promise<Niveau> {
     const niveau = await this.niveauRepository.findOneBy({ id });
     if (!niveau) throw new NotFoundException(`Niveau ${id} introuvable`);
-
-    if (dto.specialiteId) {
-      const specialite = await this.specialiteRepository.findOneBy({
-        id: dto.specialiteId,
-      });
-      if (!specialite)
-        throw new NotFoundException(
-          `Spécialité avec ID ${dto.specialiteId} introuvable`,
-        );
-      niveau.specialite = specialite;
-    }
 
     if (dto.nom) niveau.nom = dto.nom;
 

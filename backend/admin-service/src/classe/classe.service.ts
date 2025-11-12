@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Classe } from './entities/classe.entity';
 import { CreateClasseDto } from './dto/create-classe.dto';
 import { UpdateClasseDto } from './dto/update-classe.dto';
+import { Specialite } from '../specialite/entities/specialite.entity';
 import { Niveau } from '../niveau/entities/niveau.entity';
 
 @Injectable()
@@ -11,43 +12,115 @@ export class ClasseService {
   constructor(
     @InjectRepository(Classe)
     private repo: Repository<Classe>,
+    @InjectRepository(Specialite)
+    private specialiteRepo: Repository<Specialite>,
     @InjectRepository(Niveau)
     private niveauRepo: Repository<Niveau>,
   ) {}
 
   async create(dto: CreateClasseDto) {
+    const specialite = await this.specialiteRepo.findOne({
+      where: { id: dto.specialiteId },
+      relations: ['niveau'],
+    });
+    if (!specialite) throw new NotFoundException('Spécialité introuvable');
+
     const niveau = await this.niveauRepo.findOneBy({ id: dto.niveauId });
     if (!niveau) throw new NotFoundException('Niveau introuvable');
 
+    // 🔥 Génération automatique du nom de classe
+    const nomClasse = await this.genererNomClasse(specialite, niveau);
+
     const classe = this.repo.create({
-      nom: dto.nom,
+      nom: nomClasse,
       niveau,
+      specialite,
     });
 
     return this.repo.save(classe);
   }
 
+  /**
+   * Génère automatiquement le nom de la classe selon le format :
+   * {CODE_SPECIALITE} {NUMERO_NIVEAU}{COMPTEUR}
+   * Exemples: DSI 21, DSI 22, TI 11, GM 31
+   */
+  private async genererNomClasse(specialite: Specialite, niveau: Niveau): Promise<string> {
+    // Extraire le code de la spécialité (ex: "DSI", "TI", "GM")
+    const codeSpecialite = specialite.nom.split(' ')[0].toUpperCase();
+    
+    // Extraire le numéro du niveau (1, 2, 3, etc.)
+    const numeroNiveau = this.extraireNumeroNiveau(niveau.nom);
+    
+    // Compter combien de classes existent déjà pour cette combinaison
+    const classesExistantes = await this.repo
+      .createQueryBuilder('classe')
+      .innerJoin('classe.specialite', 'specialite')
+      .innerJoin('classe.niveau', 'niveau')
+      .where('specialite.id = :specialiteId', { specialiteId: specialite.id })
+      .andWhere('niveau.id = :niveauId', { niveauId: niveau.id })
+      .getCount();
+    
+    // Compteur commence à 1
+    const compteur = classesExistantes + 1;
+    
+    // Format final: DSI 21, DSI 22, TI 11, etc.
+    return `${codeSpecialite} ${numeroNiveau}${compteur}`;
+  }
+
+  /**
+   * Extrait le numéro du niveau à partir du nom
+   * "1ère année" → 1, "2ème année" → 2, "Master 1" → 5, etc.
+   */
+  private extraireNumeroNiveau(nomNiveau: string): number {
+    if (nomNiveau.includes('1ère') || nomNiveau.includes('1')) return 1;
+    if (nomNiveau.includes('2ème') || nomNiveau.includes('2')) return 2;
+    if (nomNiveau.includes('3ème') || nomNiveau.includes('3')) return 3;
+    if (nomNiveau.includes('Master 1') || nomNiveau.includes('M1')) return 5;
+    if (nomNiveau.includes('Master 2') || nomNiveau.includes('M2')) return 6;
+    return 1; // Par défaut
+  }
+
   findAll() {
-    return this.repo.find({ relations: ['niveau'] });
+    return this.repo.find({ relations: ['specialite', 'specialite.departement', 'specialite.niveau'] });
   }
 
   findOne(id: number) {
     return this.repo.findOne({
       where: { id },
-      relations: ['niveau'],
+      relations: ['specialite', 'specialite.departement', 'specialite.niveau'],
     });
   }
 
   async update(id: number, dto: UpdateClasseDto) {
-    const classe = await this.repo.findOneBy({ id });
+    const classe = await this.repo.findOne({
+      where: { id },
+      relations: ['specialite', 'niveau'],
+    });
     if (!classe) throw new NotFoundException('Classe introuvable');
 
-    if (dto.nom) classe.nom = dto.nom;
+    let nomMisAJour = false;
 
     if (dto.niveauId) {
-      const niv = await this.niveauRepo.findOneBy({ id: dto.niveauId });
-      if (!niv) throw new NotFoundException('Niveau introuvable');
-      classe.niveau = niv;
+      const niveau = await this.niveauRepo.findOneBy({ id: dto.niveauId });
+      if (!niveau) throw new NotFoundException('Niveau introuvable');
+      classe.niveau = niveau;
+      nomMisAJour = true;
+    }
+
+    if (dto.specialiteId) {
+      const specialite = await this.specialiteRepo.findOne({
+        where: { id: dto.specialiteId },
+        relations: ['niveau'],
+      });
+      if (!specialite) throw new NotFoundException('Spécialité introuvable');
+      classe.specialite = specialite;
+      nomMisAJour = true;
+    }
+
+    // Régénérer le nom si niveau ou spécialité changent
+    if (nomMisAJour) {
+      classe.nom = await this.genererNomClasse(classe.specialite, classe.niveau);
     }
 
     return this.repo.save(classe);

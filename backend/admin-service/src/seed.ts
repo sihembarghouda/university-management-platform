@@ -47,68 +47,70 @@ async function seed() {
     });
     console.log('✅ 4 spécialités créées\n');
 
-    // 3. Créer des niveaux
+    // 3. Créer des niveaux (indépendants des spécialités)
     console.log('📊 Création des niveaux...');
     const niveau1 = await niveauService.create({
       nom: 'Licence 1',
-      specialiteId: spec1.id,
     });
     const niveau2 = await niveauService.create({
       nom: 'Licence 2',
-      specialiteId: spec1.id,
     });
     const niveau3 = await niveauService.create({
       nom: 'Licence 3',
-      specialiteId: spec1.id,
     });
     const niveau4 = await niveauService.create({
       nom: 'Master 1',
-      specialiteId: spec2.id,
     });
     const niveau5 = await niveauService.create({
-      nom: 'Licence 1',
-      specialiteId: spec3.id,
+      nom: 'Master 2',
     });
     console.log('✅ 5 niveaux créés\n');
 
-    // 4. Créer des classes
+    // 4. Créer des classes (liées aux spécialités et niveaux)
+    // ❌ nom retiré - généré automatiquement à partir de niveau + spécialité
     console.log('🏫 Création des classes...');
     const classe1 = await classeService.create({
-      nom: 'L1-DEV-A',
-      niveauId: niveau1.id,
+      niveauId: niveau1.id, // 1ère année
+      specialiteId: spec1.id, // Développement Logiciel → "DEV 11"
     });
     const classe2 = await classeService.create({
-      nom: 'L1-DEV-B',
-      niveauId: niveau1.id,
+      niveauId: niveau1.id, // 1ère année
+      specialiteId: spec1.id, // Développement Logiciel → "DEV 12"
     });
     const classe3 = await classeService.create({
-      nom: 'L2-DEV-A',
-      niveauId: niveau2.id,
+      niveauId: niveau2.id, // 2ème année
+      specialiteId: spec1.id, // Développement Logiciel → "DEV 21"
     });
     const classe4 = await classeService.create({
-      nom: 'L3-DEV-A',
-      niveauId: niveau3.id,
+      niveauId: niveau3.id, // 3ème année
+      specialiteId: spec1.id, // Développement Logiciel → "DEV 31"
     });
     const classe5 = await classeService.create({
-      nom: 'M1-IA-A',
-      niveauId: niveau4.id,
+      niveauId: niveau4.id, // Master 1
+      specialiteId: spec2.id, // Intelligence Artificielle → "IA 51"
     });
     const classe6 = await classeService.create({
-      nom: 'L1-MATH-A',
-      niveauId: niveau5.id,
+      niveauId: niveau1.id, // 1ère année
+      specialiteId: spec3.id, // Mathématiques → "MATHÉMATIQUES 11"
     });
-    console.log('✅ 6 classes créées\n');
+    console.log('✅ 6 classes créées avec noms auto-générés\n');
 
-    // 5. Créer des enseignants
-    console.log('👨‍🏫 Création des enseignants...');
+    // 5. Créer des spécialités d'enseignement (pour les enseignants)
+    console.log('� Création des spécialités d\'enseignement...');
+    const specEns1 = { id: 1 }; // Programmation (supposons qu'elle existe avec id=1)
+    const specEns2 = { id: 7 }; // Sécurité informatique (id=7)
+    const specEns3 = { id: 23 }; // Mathématiques (id=23)
+    console.log('✅ Utilisation des spécialités d\'enseignement existantes\n');
+
+    // 6. Créer des enseignants
+    console.log('�👨‍🏫 Création des enseignants...');
     const ens1 = await enseignantService.create({
       nom: 'Dupont',
       prenom: 'Jean',
       email: 'jean.dupont@university.com',
       grade: 'Professeur',
       departementId: dept1.id,
-      specialiteIds: [spec1.id, spec2.id],
-      classeIds: [classe1.id, classe2.id],
+      specialiteEnseignementId: specEns1.id, // Programmation
     });
     const ens2 = await enseignantService.create({
       nom: 'Martin',
@@ -116,8 +118,7 @@ async function seed() {
       email: 'sophie.martin@university.com',
       grade: 'Maître de Conférences',
       departementId: dept1.id,
-      specialiteIds: [spec1.id],
-      classeIds: [classe3.id, classe4.id],
+      specialiteEnseignementId: specEns2.id, // Sécurité informatique
     });
     const ens3 = await enseignantService.create({
       nom: 'Bernard',
@@ -125,12 +126,11 @@ async function seed() {
       email: 'pierre.bernard@university.com',
       grade: 'Professeur',
       departementId: dept2.id,
-      specialiteIds: [spec3.id],
-      classeIds: [classe6.id],
+      specialiteEnseignementId: specEns3.id, // Mathématiques
     });
     console.log('✅ 3 enseignants créés\n');
 
-    // 6. Créer des étudiants
+    // 7. Créer des étudiants
     console.log('🎓 Création des étudiants...');
     await etudiantService.create({
       nom: 'Durand',

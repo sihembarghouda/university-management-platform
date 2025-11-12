@@ -4,31 +4,48 @@ import {
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
-  ManyToMany,
-  OneToMany,
-  JoinTable,
+  BeforeInsert,
+  BeforeUpdate,
 } from 'typeorm';
 import { Departement } from '../departement/entities/departement.entity';
-import { Specialite } from '../specialite/entities/specialite.entity';
-import { Classe } from '../classe/entities/classe.entity';
-//import { Matiere } from '../matiere/matiere.entity';
+import { SpecialiteEnseignement } from './specialite-enseignement.entity';
 
 @Entity()
 export class Enseignant {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ nullable: false })
   nom: string;
 
-  @Column()
+  @Column({ nullable: false })
   prenom: string;
 
-  @Column({ unique: true })
+  @Column({ unique: true, nullable: false })
   email: string;
 
   @Column({ nullable: true })
   grade: string;
+
+  // Validation avant insertion/mise à jour
+  @BeforeInsert()
+  @BeforeUpdate()
+  validateEmail() {
+    if (!this.email || !this.email.includes('@')) {
+      throw new Error('Email invalide : doit contenir @');
+    }
+    this.email = this.email.toLowerCase().trim();
+  }
+
+  @BeforeInsert()
+  @BeforeUpdate()
+  validateNomPrenom() {
+    if (this.nom) this.nom = this.nom.trim();
+    if (this.prenom) this.prenom = this.prenom.trim();
+    if (!this.nom || !this.prenom) {
+      throw new Error('Nom et prénom sont obligatoires');
+    }
+  }
 
   // 🔹 Un enseignant appartient à un seul département
   @ManyToOne(() => Departement, (departement) => departement.enseignants, {
@@ -36,21 +53,13 @@ export class Enseignant {
   })
   departement: Departement;
 
-  // 🔹 Un enseignant peut enseigner dans plusieurs spécialités
-  @ManyToMany(() => Specialite, (specialite) => specialite.enseignants, {
-    cascade: true,
+  // 🔹 Un enseignant a UNE SEULE spécialité d'enseignement (sa matière d'expertise)
+  @ManyToOne(() => SpecialiteEnseignement, {
+    onDelete: 'SET NULL',
+    nullable: true,
   })
-  @JoinTable()
-  specialites: Specialite[];
+  specialiteEnseignement: SpecialiteEnseignement;
 
-  // 🔹 Un enseignant peut enseigner dans plusieurs classes
-  @ManyToMany(() => Classe, (classe) => classe.enseignants, {
-    cascade: true,
-  })
-  @JoinTable()
-  classes: Classe[];
-
-  // 🔹 Un enseignant enseigne plusieurs matières
-  //@OneToMany(() => Matiere, (matiere) => matiere.enseignant)
-  //matieres: Matiere[];
+  // ❌ RETIRÉ: classes - Les classes changent chaque année via l'emploi du temps
+  // L'association enseignant-classe se fera via un module "Emploi du Temps" ou "Affectation"
 }

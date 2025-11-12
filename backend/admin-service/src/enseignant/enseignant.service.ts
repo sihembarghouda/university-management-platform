@@ -1,11 +1,10 @@
 // src/enseignant/enseignant.service.ts
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Enseignant } from './enseignant.entity';
 import { Departement } from '../departement/entities/departement.entity';
-import { Specialite } from '../specialite/entities/specialite.entity';
-import { Classe } from '../classe/entities/classe.entity';
+import { SpecialiteEnseignement } from './specialite-enseignement.entity';
 import { CreateEnseignantDto } from './dto/create-enseignant.dto';
 
 @Injectable()
@@ -15,23 +14,18 @@ export class EnseignantService {
     private enseignantRepo: Repository<Enseignant>,
     @InjectRepository(Departement)
     private depRepo: Repository<Departement>,
-    @InjectRepository(Specialite)
-    private specRepo: Repository<Specialite>,
-    @InjectRepository(Classe)
-    private classeRepo: Repository<Classe>,
+    @InjectRepository(SpecialiteEnseignement)
+    private specEnsRepo: Repository<SpecialiteEnseignement>,
   ) {}
 
   async create(dto: CreateEnseignantDto) {
     const departement = await this.depRepo.findOneBy({ id: dto.departementId });
     if (!departement) throw new NotFoundException('Département introuvable');
 
-    const specialites = await this.specRepo.find({
-      where: { id: In(dto.specialiteIds) },
+    const specialiteEnseignement = await this.specEnsRepo.findOneBy({ 
+      id: dto.specialiteEnseignementId 
     });
-
-    const classes = await this.classeRepo.find({
-      where: { id: In(dto.classeIds) },
-    });
+    if (!specialiteEnseignement) throw new NotFoundException('Spécialité d\'enseignement introuvable');
 
     const enseignant = this.enseignantRepo.create({
       nom: dto.nom,
@@ -39,8 +33,7 @@ export class EnseignantService {
       email: dto.email,
       grade: dto.grade,
       departement,
-      specialites,
-      classes,
+      specialiteEnseignement,
     });
 
     return this.enseignantRepo.save(enseignant);
@@ -48,14 +41,14 @@ export class EnseignantService {
 
   findAll() {
     return this.enseignantRepo.find({
-      relations: ['departement', 'specialites', 'classes'],
+      relations: ['departement', 'specialiteEnseignement'],
     });
   }
 
   async findOne(id: number) {
     const enseignant = await this.enseignantRepo.findOne({
       where: { id },
-      relations: ['departement', 'specialites', 'classes'],
+      relations: ['departement', 'specialiteEnseignement'],
     });
     if (!enseignant) throw new NotFoundException('Enseignant non trouvé');
     return enseignant;
@@ -70,18 +63,12 @@ export class EnseignantService {
       enseignant.departement = departement;
     }
 
-    if (dto.specialiteIds && dto.specialiteIds.length > 0) {
-      const specialites = await this.specRepo.find({
-        where: { id: In(dto.specialiteIds) },
+    if (dto.specialiteEnseignementId) {
+      const specialiteEnseignement = await this.specEnsRepo.findOneBy({ 
+        id: dto.specialiteEnseignementId 
       });
-      enseignant.specialites = specialites;
-    }
-
-    if (dto.classeIds && dto.classeIds.length > 0) {
-      const classes = await this.classeRepo.find({
-        where: { id: In(dto.classeIds) },
-      });
-      enseignant.classes = classes;
+      if (!specialiteEnseignement) throw new NotFoundException('Spécialité d\'enseignement introuvable');
+      enseignant.specialiteEnseignement = specialiteEnseignement;
     }
 
     enseignant.nom = dto.nom;
