@@ -10,8 +10,8 @@ export class Departement {
   @Column({ unique: true, nullable: false })
   nom: string;
 
-  @Column({ nullable: true, type: 'text' })
-  description: string;
+  @Column({ unique: true, nullable: false })
+  code: string;
 
   // Validation avant insertion/mise à jour
   @BeforeInsert()

@@ -5,7 +5,7 @@ import { Loader2 } from 'lucide-react';
 const AddDepartmentModal = ({ isOpen, onClose, onDepartmentAdded }) => {
   const [formData, setFormData] = useState({
     nom: '',
-    description: ''
+    code: ''
   });
   
   const [loading, setLoading] = useState(false);
@@ -28,6 +28,10 @@ const AddDepartmentModal = ({ isOpen, onClose, onDepartmentAdded }) => {
     
     if (!formData.nom.trim()) {
       newErrors.nom = 'Le nom du département est requis';
+    }
+    
+    if (!formData.code.trim()) {
+      newErrors.code = 'Le code du département est requis';
     }
     
     setErrors(newErrors);
@@ -54,7 +58,7 @@ const AddDepartmentModal = ({ isOpen, onClose, onDepartmentAdded }) => {
       // Reset form
       setFormData({
         nom: '',
-        description: ''
+        code: ''
       });
       
       // Notify parent component
@@ -86,23 +90,26 @@ const AddDepartmentModal = ({ isOpen, onClose, onDepartmentAdded }) => {
             className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
               errors.nom ? 'border-red-500' : 'border-gray-300'
             }`}
-            placeholder="Ex: Informatique, Mathématiques, Physique..."
+            placeholder="Ex: Génie Mécanique, Informatique..."
           />
           {errors.nom && <p className="text-red-500 text-sm mt-1">{errors.nom}</p>}
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Description (optionnel)
+            Code du Département <span className="text-red-500">*</span>
           </label>
-          <textarea
-            name="description"
-            value={formData.description}
+          <input
+            type="text"
+            name="code"
+            value={formData.code}
             onChange={handleChange}
-            rows="4"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            placeholder="Décrivez le département..."
+            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+              errors.code ? 'border-red-500' : 'border-gray-300'
+            }`}
+            placeholder="Ex: GM, TI, GE..."
           />
+          {errors.code && <p className="text-red-500 text-sm mt-1">{errors.code}</p>}
         </div>
 
         <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">

@@ -24,6 +24,12 @@ export class Enseignant {
   @Column({ unique: true, nullable: false })
   email: string;
 
+  @Column({ unique: true, nullable: true, length: 8 })
+  cin: string;
+
+  @Column({ nullable: true })
+  telephone: string;
+
   @Column({ nullable: true })
   grade: string;
 

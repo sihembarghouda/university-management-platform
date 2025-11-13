@@ -6,6 +6,7 @@ import { Enseignant } from './enseignant.entity';
 import { Departement } from '../departement/entities/departement.entity';
 import { SpecialiteEnseignement } from './specialite-enseignement.entity';
 import { CreateEnseignantDto } from './dto/create-enseignant.dto';
+import { UpdateEnseignantDto } from './dto/update-enseignant.dto';
 
 @Injectable()
 export class EnseignantService {
@@ -54,7 +55,7 @@ export class EnseignantService {
     return enseignant;
   }
 
-  async update(id: number, dto: CreateEnseignantDto) {
+  async update(id: number, dto: UpdateEnseignantDto) {
     const enseignant = await this.findOne(id);
 
     if (dto.departementId) {
@@ -71,10 +72,12 @@ export class EnseignantService {
       enseignant.specialiteEnseignement = specialiteEnseignement;
     }
 
-    enseignant.nom = dto.nom;
-    enseignant.prenom = dto.prenom;
-    enseignant.email = dto.email;
-    enseignant.grade = dto.grade;
+    if (dto.nom !== undefined) enseignant.nom = dto.nom;
+    if (dto.prenom !== undefined) enseignant.prenom = dto.prenom;
+    if (dto.email !== undefined) enseignant.email = dto.email;
+    if (dto.cin !== undefined) enseignant.cin = dto.cin;
+    if (dto.telephone !== undefined) enseignant.telephone = dto.telephone;
+    if (dto.grade !== undefined) enseignant.grade = dto.grade;
 
     return this.enseignantRepo.save(enseignant);
   }

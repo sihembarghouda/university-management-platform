@@ -22,9 +22,9 @@ async function seed() {
   try {
     // 1. Créer des départements
     console.log('📁 Création des départements...');
-    const dept1 = await departementService.create({ nom: 'Informatique' });
-    const dept2 = await departementService.create({ nom: 'Mathématiques' });
-    const dept3 = await departementService.create({ nom: 'Physique' });
+    const dept1 = await departementService.create({ nom: 'Informatique', code: 'INFO' });
+    const dept2 = await departementService.create({ nom: 'Mathématiques', code: 'MATH' });
+    const dept3 = await departementService.create({ nom: 'Physique', code: 'PHY' });
     console.log('✅ 3 départements créés\n');
 
     // 2. Créer des spécialités

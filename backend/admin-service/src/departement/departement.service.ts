@@ -13,7 +13,10 @@ export class DepartementService {
   ) {}
 
   create(dto: CreateDepartementDto) {
-    const dep = this.repo.create({ nom: dto.nom });
+    const dep = this.repo.create({ 
+      nom: dto.nom,
+      code: dto.code 
+    });
     return this.repo.save(dep);
   }
 

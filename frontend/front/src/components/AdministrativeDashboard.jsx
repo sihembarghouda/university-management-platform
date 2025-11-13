@@ -7,6 +7,10 @@ import AddStudentModal from './AddStudentModal';
 import AddTeacherModal from './AddTeacherModal';
 import AddDepartmentModal from './AddDepartmentModal';
 import AddClasseModal from './AddClasseModal';
+import EditStudentModal from './EditStudentModal';
+import EditTeacherModal from './EditTeacherModal';
+import EditDepartmentModal from './EditDepartmentModal';
+import EditClasseModal from './EditClasseModal';
 
 const AdminDashboard = () => {
   const { user, logout, updateUser } = useAuth();
@@ -21,6 +25,18 @@ const AdminDashboard = () => {
   const [showAddTeacherModal, setShowAddTeacherModal] = useState(false);
   const [showAddDepartmentModal, setShowAddDepartmentModal] = useState(false);
   const [showAddClasseModal, setShowAddClasseModal] = useState(false);
+  
+  // États pour les modaux de modification
+  const [showEditStudentModal, setShowEditStudentModal] = useState(false);
+  const [showEditTeacherModal, setShowEditTeacherModal] = useState(false);
+  const [showEditDepartmentModal, setShowEditDepartmentModal] = useState(false);
+  const [showEditClasseModal, setShowEditClasseModal] = useState(false);
+  
+  // États pour les éléments sélectionnés
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [selectedTeacher, setSelectedTeacher] = useState(null);
+  const [selectedDepartment, setSelectedDepartment] = useState(null);
+  const [selectedClasse, setSelectedClasse] = useState(null);
 
   // États pour les données
   const [stats, setStats] = useState({
@@ -215,16 +231,23 @@ const AdminDashboard = () => {
     if (!window.confirm('Êtes-vous sûr de vouloir supprimer cet étudiant ?')) return;
     
     try {
-      const result = await etudiantService.delete ? await etudiantService.delete(id) : { success: false, message: 'Fonction non disponible' };
+      const result = await etudiantService.delete(id);
       if (result.success) {
         loadStudents();
-        alert('Étudiant supprimé avec succès');
+        loadDashboardStats();
+        alert('✅ Étudiant supprimé avec succès');
       } else {
-        alert(result.message);
+        alert(`❌ ${result.message}`);
       }
     } catch (err) {
-      alert('Erreur lors de la suppression');
+      alert('❌ Erreur lors de la suppression');
     }
+  };
+
+  // Fonction pour modifier un étudiant
+  const handleEditStudent = (student) => {
+    setSelectedStudent(student);
+    setShowEditStudentModal(true);
   };
 
   // Fonction pour supprimer un enseignant
@@ -235,13 +258,20 @@ const AdminDashboard = () => {
       const result = await enseignantService.delete(id);
       if (result.success) {
         loadTeachers();
-        alert('Enseignant supprimé avec succès');
+        loadDashboardStats();
+        alert('✅ Enseignant supprimé avec succès');
       } else {
-        alert(result.message);
+        alert(`❌ ${result.message}`);
       }
     } catch (err) {
-      alert('Erreur lors de la suppression');
+      alert('❌ Erreur lors de la suppression');
     }
+  };
+
+  // Fonction pour modifier un enseignant
+  const handleEditTeacher = (teacher) => {
+    setSelectedTeacher(teacher);
+    setShowEditTeacherModal(true);
   };
 
   // Fonction pour supprimer un département
@@ -252,13 +282,44 @@ const AdminDashboard = () => {
       const result = await departementService.delete(id);
       if (result.success) {
         loadDepartments();
-        alert('Département supprimé avec succès');
+        loadDashboardStats();
+        alert('✅ Département supprimé avec succès');
       } else {
-        alert(result.message);
+        alert(`❌ ${result.message}`);
       }
     } catch (err) {
-      alert('Erreur lors de la suppression');
+      alert('❌ Erreur lors de la suppression');
     }
+  };
+
+  // Fonction pour modifier un département
+  const handleEditDepartment = (department) => {
+    setSelectedDepartment(department);
+    setShowEditDepartmentModal(true);
+  };
+
+  // Fonction pour supprimer une classe
+  const handleDeleteClasse = async (id) => {
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer cette classe ?')) return;
+    
+    try {
+      const result = await classeService.delete(id);
+      if (result.success) {
+        loadClasses();
+        loadDashboardStats();
+        alert('✅ Classe supprimée avec succès');
+      } else {
+        alert(`❌ ${result.message}`);
+      }
+    } catch (err) {
+      alert('❌ Erreur lors de la suppression');
+    }
+  };
+
+  // Fonction pour modifier une classe
+  const handleEditClasse = (classe) => {
+    setSelectedClasse(classe);
+    setShowEditClasseModal(true);
   };
 
   const recentActivities = [
@@ -369,7 +430,7 @@ const AdminDashboard = () => {
                   <div className="flex items-center gap-6 text-sm">
                     <div className="flex items-center gap-2">
                       <Building2 size={16} className="text-blue-600" />
-                      <span className="text-gray-600">{dept.description || 'Département académique'}</span>
+                      <span className="text-gray-600">Département {dept.code}</span>
                     </div>
                   </div>
                 </div>
@@ -471,7 +532,7 @@ const AdminDashboard = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nom</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Prénom</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Téléphone</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Classe</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
               </tr>
             </thead>
@@ -481,15 +542,20 @@ const AdminDashboard = () => {
                   <td className="px-6 py-4 text-sm text-gray-900">{student.nom}</td>
                   <td className="px-6 py-4 text-sm text-gray-600">{student.prenom}</td>
                   <td className="px-6 py-4 text-sm text-gray-600">{student.email}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{student.telephone || '-'}</td>
+                  <td className="px-6 py-4 text-sm text-gray-600">{student.classe?.nom || 'Non assigné'}</td>
                   <td className="px-6 py-4 text-sm">
                     <div className="flex gap-2">
-                      <button className="p-1 text-blue-600 hover:bg-blue-50 rounded">
+                      <button 
+                        onClick={() => handleEditStudent(student)}
+                        className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                        title="Modifier"
+                      >
                         <Edit size={16} />
                       </button>
                       <button 
                         onClick={() => handleDeleteStudent(student.id)}
                         className="p-1 text-red-600 hover:bg-red-50 rounded"
+                        title="Supprimer"
                       >
                         <Trash2 size={16} />
                       </button>
@@ -568,12 +634,17 @@ const AdminDashboard = () => {
                   <td className="px-6 py-4 text-sm text-gray-600">{teacher.grade || '-'}</td>
                   <td className="px-6 py-4 text-sm">
                     <div className="flex gap-2">
-                      <button className="p-1 text-blue-600 hover:bg-blue-50 rounded">
+                      <button 
+                        onClick={() => handleEditTeacher(teacher)}
+                        className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                        title="Modifier"
+                      >
                         <Edit size={16} />
                       </button>
                       <button 
                         onClick={() => handleDeleteTeacher(teacher.id)}
                         className="p-1 text-red-600 hover:bg-red-50 rounded"
+                        title="Supprimer"
                       >
                         <Trash2 size={16} />
                       </button>
@@ -623,16 +694,20 @@ const AdminDashboard = () => {
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <h4 className="text-xl font-bold text-gray-800 mb-2">{dept.nom}</h4>
-                  <p className="text-sm text-gray-600">ID: {dept.id}</p>
-                  {dept.description && <p className="text-sm text-gray-500 mt-2">{dept.description}</p>}
+                  <p className="text-sm text-gray-600">Code: {dept.code}</p>
                 </div>
                 <div className="flex gap-2">
-                  <button className="p-2 text-blue-600 hover:bg-blue-50 rounded">
+                  <button 
+                    onClick={() => handleEditDepartment(dept)}
+                    className="p-2 text-blue-600 hover:bg-blue-50 rounded"
+                    title="Modifier"
+                  >
                     <Edit size={18} />
                   </button>
                   <button 
                     onClick={() => handleDeleteDepartment(dept.id)}
                     className="p-2 text-red-600 hover:bg-red-50 rounded"
+                    title="Supprimer"
                   >
                     <Trash2 size={18} />
                   </button>
@@ -678,10 +753,18 @@ const AdminDashboard = () => {
                   <p className="text-sm text-gray-600">Code: {classe.code}</p>
                 </div>
                 <div className="flex gap-2">
-                  <button className="p-2 text-blue-600 hover:bg-blue-50 rounded">
+                  <button 
+                    onClick={() => handleEditClasse(classe)}
+                    className="p-2 text-blue-600 hover:bg-blue-50 rounded"
+                    title="Modifier"
+                  >
                     <Edit size={18} />
                   </button>
-                  <button className="p-2 text-red-600 hover:bg-red-50 rounded">
+                  <button 
+                    onClick={() => handleDeleteClasse(classe.id)}
+                    className="p-2 text-red-600 hover:bg-red-50 rounded"
+                    title="Supprimer"
+                  >
                     <Trash2 size={18} />
                   </button>
                 </div>
@@ -1063,6 +1146,59 @@ const AdminDashboard = () => {
           loadClasses();
           loadDashboardStats();
         }}
+      />
+
+      {/* Modaux de modification */}
+      <EditStudentModal 
+        isOpen={showEditStudentModal}
+        onClose={() => {
+          setShowEditStudentModal(false);
+          setSelectedStudent(null);
+        }}
+        onStudentUpdated={() => {
+          loadStudents();
+          loadDashboardStats();
+        }}
+        student={selectedStudent}
+      />
+
+      <EditTeacherModal 
+        isOpen={showEditTeacherModal}
+        onClose={() => {
+          setShowEditTeacherModal(false);
+          setSelectedTeacher(null);
+        }}
+        onTeacherUpdated={() => {
+          loadTeachers();
+          loadDashboardStats();
+        }}
+        teacher={selectedTeacher}
+      />
+
+      <EditDepartmentModal 
+        isOpen={showEditDepartmentModal}
+        onClose={() => {
+          setShowEditDepartmentModal(false);
+          setSelectedDepartment(null);
+        }}
+        onDepartmentUpdated={() => {
+          loadDepartments();
+          loadDashboardStats();
+        }}
+        department={selectedDepartment}
+      />
+
+      <EditClasseModal 
+        isOpen={showEditClasseModal}
+        onClose={() => {
+          setShowEditClasseModal(false);
+          setSelectedClasse(null);
+        }}
+        onClasseUpdated={() => {
+          loadClasses();
+          loadDashboardStats();
+        }}
+        classe={selectedClasse}
       />
     </div>
   );

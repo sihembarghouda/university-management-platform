@@ -216,7 +216,7 @@ const AddStudentModal = ({ isOpen, onClose, onStudentAdded }) => {
               <option value="">Sélectionnez une classe</option>
               {classes.map(classe => (
                 <option key={classe.id} value={classe.id}>
-                  {classe.nom} - {classe.niveau?.nom || 'N/A'} - {classe.specialite?.nom || 'N/A'}
+                  {classe.nom}
                 </option>
               ))}
             </select>

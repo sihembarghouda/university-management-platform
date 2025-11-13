@@ -1,9 +1,9 @@
-// src/enseignant/dto/create-enseignant.dto.ts
 import {
   IsNotEmpty,
   IsString,
   IsEmail,
   IsNumber,
+  IsOptional,
 } from 'class-validator';
 
 export class CreateEnseignantDto {
@@ -17,6 +17,14 @@ export class CreateEnseignantDto {
 
   @IsEmail()
   email: string;
+
+  @IsString()
+  @IsOptional()
+  cin?: string;
+
+  @IsString()
+  @IsOptional()
+  telephone?: string;
 
   @IsString()
   grade: string;

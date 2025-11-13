@@ -52,13 +52,12 @@ export class ClasseService {
     // Extraire le numéro du niveau (1, 2, 3, etc.)
     const numeroNiveau = this.extraireNumeroNiveau(niveau.nom);
     
-    // Compter combien de classes existent déjà pour cette combinaison
+    // Chercher toutes les classes dont le nom commence par le pattern attendu (ex: "TI 1")
+    // Pour gérer les données existantes qui peuvent avoir des specialiteId différents
+    const pattern = `${codeSpecialite} ${numeroNiveau}%`;
     const classesExistantes = await this.repo
       .createQueryBuilder('classe')
-      .innerJoin('classe.specialite', 'specialite')
-      .innerJoin('classe.niveau', 'niveau')
-      .where('specialite.id = :specialiteId', { specialiteId: specialite.id })
-      .andWhere('niveau.id = :niveauId', { niveauId: niveau.id })
+      .where('classe.nom LIKE :pattern', { pattern })
       .getCount();
     
     // Compteur commence à 1

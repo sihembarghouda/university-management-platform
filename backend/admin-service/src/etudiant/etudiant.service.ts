@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Etudiant } from './entities/etudiant.entity';
 import { Classe } from '../classe/entities/classe.entity';
 import { CreateEtudiantDto } from './dto/create-etudiant.dto';
+import { UpdateEtudiantDto } from './dto/update-etudiant.dto';
 
 @Injectable()
 export class EtudiantService {
@@ -43,7 +44,7 @@ export class EtudiantService {
     return etudiant;
   }
 
-  async update(id: number, dto: CreateEtudiantDto) {
+  async update(id: number, dto: UpdateEtudiantDto) {
     const etudiant = await this.findOne(id);
     
     if (dto.classeId) {
@@ -54,10 +55,10 @@ export class EtudiantService {
       etudiant.classe = classe;
     }
 
-    etudiant.nom = dto.nom;
-    etudiant.prenom = dto.prenom;
-    etudiant.email = dto.email;
-    etudiant.cin = dto.cin;
+    if (dto.nom !== undefined) etudiant.nom = dto.nom;
+    if (dto.prenom !== undefined) etudiant.prenom = dto.prenom;
+    if (dto.email !== undefined) etudiant.email = dto.email;
+    if (dto.cin !== undefined) etudiant.cin = dto.cin;
 
     return this.etudiantRepo.save(etudiant);
   }

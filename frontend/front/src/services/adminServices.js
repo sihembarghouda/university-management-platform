@@ -35,10 +35,10 @@ export const departementService = {
   update: async (id, data) => {
     try {
       const response = await adminApi.patch(`/departement/${id}`, data);
-      return response.data;
+      return { success: true, data: response.data };
     } catch (error) {
       console.error("Erreur departementService.update:", error);
-      throw error;
+      return { success: false, message: error.response?.data?.message || error.message };
     }
   },
 
@@ -88,10 +88,10 @@ export const classeService = {
   update: async (id, data) => {
     try {
       const response = await adminApi.patch(`/classe/${id}`, data);
-      return response.data;
+      return { success: true, data: response.data };
     } catch (error) {
       console.error('Erreur classeService.update:', error);
-      throw error;
+      return { success: false, message: error.response?.data?.message || error.message };
     }
   },
 
@@ -135,6 +135,15 @@ export const enseignantService = {
     }
   },
 
+  update: async (id, data) => {
+    try {
+      const response = await adminApi.patch(`/enseignant/${id}`, data);
+      return { success: true, data: response.data };
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || "Erreur de modification" };
+    }
+  },
+
   delete: async (id) => {
     try {
       await adminApi.delete(`/enseignant/${id}`);
@@ -162,6 +171,24 @@ export const etudiantService = {
       return { success: true, data: response.data };
     } catch (error) {
       return { success: false, message: error.response?.data?.message || "Erreur de création" };
+    }
+  },
+
+  update: async (id, data) => {
+    try {
+      const response = await adminApi.patch(`/etudiants/${id}`, data);
+      return { success: true, data: response.data };
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || "Erreur de modification" };
+    }
+  },
+
+  delete: async (id) => {
+    try {
+      await adminApi.delete(`/etudiants/${id}`);
+      return { success: true };
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || "Erreur de suppression" };
     }
   }
 };
