@@ -22,6 +22,11 @@ export class AuthController {
   changePassword(@Body() dto: ChangePasswordDto) {
     return this.auth.changePassword(dto.email, dto.currentPassword, dto.newPassword);
   }
+
+  @Post('update-profile')
+  updateProfile(@Body() body: { email: string; nom?: string; prenom?: string; cin?: string }) {
+    return this.auth.updateProfile(body.email, { nom: body.nom, prenom: body.prenom, cin: body.cin });
+  }
   
   @Post('confirm-email')
   confirmEmail(@Body() dto: ConfirmEmailDto) {

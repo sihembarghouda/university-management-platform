@@ -27,6 +27,10 @@ export class CreateEnseignantDto {
   telephone?: string;
 
   @IsString()
+  @IsOptional()
+  role?: string;  // 'enseignant' ou 'directeur_departement'
+
+  @IsString()
   grade: string;
 
   @IsNumber()

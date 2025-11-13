@@ -1,6 +1,6 @@
 import { BadRequestException, ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 import { Utilisateur } from 'src/utilisateur/utilisateur.entity/utilisateur.entity';
@@ -19,7 +19,8 @@ export class AuthService {
   constructor(
     @InjectRepository(Utilisateur) private readonly usersRepo: Repository<Utilisateur>,
     private readonly jwt: JwtService,
-    private readonly mailerService: MailerService
+    private readonly mailerService: MailerService,
+    private readonly dataSource: DataSource
   ) {}
 
   private async hash(s: string) {
@@ -32,96 +33,338 @@ export class AuthService {
   async login(email: string, password: string) {
     console.log('🔑 [Login] Attempt for email:', email);
     
-    const user = await this.usersRepo.findOne({ where: { email } });
-    if (!user) {
-      console.log('❌ [Login] User not found');
-      throw new UnauthorizedException('Identifiants invalides');
+    // 1️⃣ Vérifier dans la table utilisateur (admin/administratif)
+    const admin = await this.usersRepo.findOne({ where: { email } });
+    if (admin) {
+      console.log('✅ [Login] Admin found:', admin.email);
+      
+      if (!admin.emailConfirmed) {
+        console.log('❌ [Login] Email not confirmed');
+        throw new ForbiddenException('Email non confirmé');
+      }
+
+      const ok = await this.compare(password, admin.mdp_hash);
+      if (!ok) {
+        console.log('❌ [Login] Password mismatch');
+        throw new UnauthorizedException('Identifiants invalides');
+      }
+
+      if (admin.doit_changer_mdp) {
+        console.log('⚠️ [Login] Password change required');
+        return {
+          success: false,
+          message: 'Changement de mot de passe requis',
+          mustChangePassword: true,
+        };
+      }
+
+      const payload = {
+        sub: admin.id,
+        email: admin.email,
+        role: admin.role,
+        nom: admin.nom,
+        prenom: admin.prenom,
+        type: 'admin',
+      };
+      const access_token = await this.jwt.signAsync(payload);
+
+      console.log('✅ [Login] Admin success!');
+      return {
+        success: true,
+        message: 'Connexion réussie',
+        type: 'admin',
+        user: {
+          id: admin.id,
+          email: admin.email,
+          role: admin.role,
+          nom: admin.nom,
+          prenom: admin.prenom,
+          cin: admin.cin,
+        },
+        token: access_token,
+      };
     }
 
-    console.log('✅ [Login] User found:', user.email);
-    console.log('🔐 [Login] Stored hash:', user.mdp_hash.substring(0, 20) + '...');
-
-    if (!user.emailConfirmed) {
-      console.log('❌ [Login] Email not confirmed');
-      throw new ForbiddenException('Email non confirmé');
-    }
-
-    console.log('🔐 [Login] Comparing password...');
-    const ok = await this.compare(password, user.mdp_hash);
-    console.log('🔐 [Login] Password match:', ok);
+    // 2️⃣ Vérifier dans la table etudiant avec requête SQL brute
+    const etudiantResult = await this.dataSource.query(
+      'SELECT * FROM etudiant WHERE email = $1 LIMIT 1',
+      [email]
+    );
     
-    if (!ok) {
-      console.log('❌ [Login] Password mismatch');
-      throw new UnauthorizedException('Identifiants invalides');
+    if (etudiantResult && etudiantResult.length > 0) {
+      const etudiant = etudiantResult[0];
+      console.log('✅ [Login] Etudiant found:', etudiant.email);
+
+      if (!etudiant.password) {
+        throw new UnauthorizedException('Compte non activé');
+      }
+
+      const ok = await this.compare(password, etudiant.password);
+      if (!ok) {
+        console.log('❌ [Login] Password mismatch');
+        throw new UnauthorizedException('Identifiants invalides');
+      }
+
+      if (etudiant.mustChangePassword) {
+        console.log('⚠️ [Login] Password change required');
+        return {
+          success: false,
+          message: 'Changement de mot de passe requis',
+          mustChangePassword: true,
+        };
+      }
+
+      const payload = {
+        sub: etudiant.id,
+        email: etudiant.email,
+        role: 'etudiant',
+        nom: etudiant.nom,
+        prenom: etudiant.prenom,
+        type: 'etudiant',
+      };
+      const access_token = await this.jwt.signAsync(payload);
+
+      console.log('✅ [Login] Etudiant success!');
+      return {
+        success: true,
+        message: 'Connexion réussie',
+        type: 'etudiant',
+        user: {
+          id: etudiant.id,
+          email: etudiant.email,
+          role: 'etudiant',
+          nom: etudiant.nom,
+          prenom: etudiant.prenom,
+          cin: etudiant.cin,
+        },
+        token: access_token,
+      };
     }
 
-    if (user.doit_changer_mdp) {
-      console.log('⚠️ [Login] Password change required');
-      throw new ForbiddenException('Changement de mot de passe requis');
+    // 3️⃣ Vérifier dans la table enseignant avec requête SQL brute
+    const enseignantResult = await this.dataSource.query(
+      'SELECT * FROM enseignant WHERE email = $1 LIMIT 1',
+      [email]
+    );
+    
+    if (enseignantResult && enseignantResult.length > 0) {
+      const enseignant = enseignantResult[0];
+      console.log('✅ [Login] Enseignant found:', enseignant.email);
+
+      if (!enseignant.password) {
+        throw new UnauthorizedException('Compte non activé');
+      }
+
+      const ok = await this.compare(password, enseignant.password);
+      if (!ok) {
+        console.log('❌ [Login] Password mismatch');
+        throw new UnauthorizedException('Identifiants invalides');
+      }
+
+      if (enseignant.mustChangePassword) {
+        console.log('⚠️ [Login] Password change required');
+        return {
+          success: false,
+          message: 'Changement de mot de passe requis',
+          mustChangePassword: true,
+        };
+      }
+
+      const role = enseignant.role || 'enseignant';
+      const payload = {
+        sub: enseignant.id,
+        email: enseignant.email,
+        role: role,
+        nom: enseignant.nom,
+        prenom: enseignant.prenom,
+        type: role, // 'enseignant' ou 'directeur_departement'
+      };
+      const access_token = await this.jwt.signAsync(payload);
+
+      console.log('✅ [Login] Enseignant success! Role:', role);
+      return {
+        success: true,
+        message: 'Connexion réussie',
+        type: role,
+        user: {
+          id: enseignant.id,
+          email: enseignant.email,
+          role: role,
+          nom: enseignant.nom,
+          prenom: enseignant.prenom,
+          cin: enseignant.cin,
+        },
+        token: access_token,
+      };
     }
 
-    const payload = {
-      sub: user.id,
-      email: user.email,
-      role: user.role,
-      nom: user.nom,
-      prenom: user.prenom,
-    };
-    const access_token = await this.jwt.signAsync(payload);
-
-    console.log('✅ [Login] Success!');
-    return {
-      success: true,
-      message: 'Connexion réussie',
-      user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        nom: user.nom,
-        prenom: user.prenom,
-      },
-      token: access_token,
-    };
+    // ❌ Aucun utilisateur trouvé
+    console.log('❌ [Login] No user found in any table');
+    throw new UnauthorizedException('Identifiants invalides');
   }
 
   async changePassword(email: string, currentPassword: string, newPassword: string) {
-    const user = await this.usersRepo.findOne({ where: { email } });
-    if (!user) throw new UnauthorizedException('Utilisateur introuvable');
-
-    const ok = await this.compare(currentPassword, user.mdp_hash);
-    if (!ok) throw new UnauthorizedException('Mot de passe actuel incorrect');
-
     // Valider le nouveau mot de passe
     const validation = validatePassword(newPassword);
     if (!validation.isValid) {
       throw new BadRequestException(validation.errors.join(', '));
     }
 
-    user.mdp_hash = await this.hash(newPassword);
-    user.doit_changer_mdp = false;
+    const hashedNewPassword = await this.hash(newPassword);
 
+    // 1️⃣ Vérifier dans la table utilisateur (admin)
+    const admin = await this.usersRepo.findOne({ where: { email } });
+    if (admin) {
+      const ok = await this.compare(currentPassword, admin.mdp_hash);
+      if (!ok) throw new UnauthorizedException('Mot de passe actuel incorrect');
+
+      admin.mdp_hash = hashedNewPassword;
+      admin.doit_changer_mdp = false;
+      await this.usersRepo.save(admin);
+
+      const payload = {
+        sub: admin.id,
+        email: admin.email,
+        role: admin.role,
+        nom: admin.nom,
+        prenom: admin.prenom,
+        type: 'admin',
+      };
+      const access_token = await this.jwt.signAsync(payload);
+
+      return {
+        success: true,
+        message: 'Mot de passe mis à jour',
+        type: 'admin',
+        user: {
+          id: admin.id,
+          email: admin.email,
+          role: admin.role,
+          nom: admin.nom,
+          prenom: admin.prenom,
+        },
+        token: access_token,
+      };
+    }
+
+    // 2️⃣ Vérifier dans la table etudiant
+    const etudiantResult = await this.dataSource.query(
+      'SELECT * FROM etudiant WHERE email = $1 LIMIT 1',
+      [email]
+    );
+    
+    if (etudiantResult && etudiantResult.length > 0) {
+      const etudiant = etudiantResult[0];
+      const ok = await this.compare(currentPassword, etudiant.password);
+      if (!ok) throw new UnauthorizedException('Mot de passe actuel incorrect');
+
+      await this.dataSource.query(
+        'UPDATE etudiant SET password = $1, "mustChangePassword" = false WHERE email = $2',
+        [hashedNewPassword, email]
+      );
+
+      const payload = {
+        sub: etudiant.id,
+        email: etudiant.email,
+        role: 'etudiant',
+        nom: etudiant.nom,
+        prenom: etudiant.prenom,
+        type: 'etudiant',
+      };
+      const access_token = await this.jwt.signAsync(payload);
+
+      return {
+        success: true,
+        message: 'Mot de passe mis à jour',
+        type: 'etudiant',
+        user: {
+          id: etudiant.id,
+          email: etudiant.email,
+          role: 'etudiant',
+          nom: etudiant.nom,
+          prenom: etudiant.prenom,
+        },
+        token: access_token,
+      };
+    }
+
+    // 3️⃣ Vérifier dans la table enseignant
+    const enseignantResult = await this.dataSource.query(
+      'SELECT * FROM enseignant WHERE email = $1 LIMIT 1',
+      [email]
+    );
+    
+    if (enseignantResult && enseignantResult.length > 0) {
+      const enseignant = enseignantResult[0];
+      const ok = await this.compare(currentPassword, enseignant.password);
+      if (!ok) throw new UnauthorizedException('Mot de passe actuel incorrect');
+
+      await this.dataSource.query(
+        'UPDATE enseignant SET password = $1, "mustChangePassword" = false WHERE email = $2',
+        [hashedNewPassword, email]
+      );
+
+      const role = enseignant.role || 'enseignant';
+      const payload = {
+        sub: enseignant.id,
+        email: enseignant.email,
+        role: role,
+        nom: enseignant.nom,
+        prenom: enseignant.prenom,
+        type: role,
+      };
+      const access_token = await this.jwt.signAsync(payload);
+
+      return {
+        success: true,
+        message: 'Mot de passe mis à jour',
+        type: role,
+        user: {
+          id: enseignant.id,
+          email: enseignant.email,
+          role: role,
+          nom: enseignant.nom,
+          prenom: enseignant.prenom,
+        },
+        token: access_token,
+      };
+    }
+
+    // ❌ Aucun utilisateur trouvé
+    throw new UnauthorizedException('Utilisateur introuvable');
+  }
+
+  async updateProfile(email: string, updates: { nom?: string; prenom?: string; cin?: string }) {
+    console.log('🔄 [UpdateProfile] Email:', email);
+    console.log('🔄 [UpdateProfile] Updates:', updates);
+    
+    const user = await this.usersRepo.findOne({ where: { email } });
+    if (!user) {
+      console.log('❌ [UpdateProfile] User not found');
+      throw new UnauthorizedException('Utilisateur introuvable');
+    }
+
+    console.log('✅ [UpdateProfile] User found:', user.nom, user.prenom);
+
+    if (updates.nom !== undefined) user.nom = updates.nom;
+    if (updates.prenom !== undefined) user.prenom = updates.prenom;
+    if (updates.cin !== undefined) user.cin = updates.cin;
+
+    console.log('💾 [UpdateProfile] Saving updates...');
     await this.usersRepo.save(user);
-
-    const payload = {
-      sub: user.id,
-      email: user.email,
-      role: user.role,
-      nom: user.nom,
-      prenom: user.prenom,
-    };
-    const access_token = await this.jwt.signAsync(payload);
+    console.log('✅ [UpdateProfile] Saved successfully');
 
     return {
       success: true,
-      message: 'Mot de passe mis à jour',
+      message: 'Profil mis à jour avec succès',
       user: {
         id: user.id,
         email: user.email,
-        role: user.role,
         nom: user.nom,
         prenom: user.prenom,
+        cin: user.cin,
+        role: user.role,
       },
-      token: access_token,
     };
   }
 

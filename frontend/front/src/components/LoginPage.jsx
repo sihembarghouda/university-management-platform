@@ -20,9 +20,9 @@ const LoginPage = () => {
       const result = await login(email, password);
 
       if (result.success) {
-        // Redirect to role-specific dashboard
-        const userRole = result.user?.role || user?.role;
-        switch (userRole) {
+        // Redirect to role-specific dashboard based on type returned by backend
+        const userType = result.type || result.user?.role || user?.role;
+        switch (userType) {
           case 'etudiant':
             navigate('/student-dashboard');
             break;
@@ -32,13 +32,14 @@ const LoginPage = () => {
           case 'directeur_departement':
             navigate('/director-dashboard');
             break;
+          case 'admin':
           case 'administratif':
             navigate('/admin-dashboard');
             break;
           default:
             navigate('/dashboard'); // fallback
         }
-      } else if (result.message === 'Changement de mot de passe requis') {
+      } else if (result.mustChangePassword || result.message === 'Changement de mot de passe requis') {
         navigate('/change-password', { state: { email } });
       } else {
         setError(result.message);

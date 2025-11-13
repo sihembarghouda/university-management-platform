@@ -19,6 +19,12 @@ export class Etudiant {
   cin: string;
 
   @Column({ nullable: true })
+  password: string;  // Mot de passe haché (bcrypt)
+
+  @Column({ default: true })
+  mustChangePassword: boolean;  // Force changement de mot de passe au 1er login
+
+  @Column({ nullable: true })
   dateNaissance: Date;
 
   // Validation avant insertion/mise à jour

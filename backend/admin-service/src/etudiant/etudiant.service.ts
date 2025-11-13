@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import * as bcrypt from 'bcrypt';
 import { Etudiant } from './entities/etudiant.entity';
 import { Classe } from '../classe/entities/classe.entity';
 import { CreateEtudiantDto } from './dto/create-etudiant.dto';
@@ -21,11 +22,16 @@ export class EtudiantService {
     });
     if (!classe) throw new NotFoundException('Classe non trouvée');
 
+    // Générer le mot de passe haché à partir du CIN
+    const hashedPassword = dto.cin ? await bcrypt.hash(dto.cin, 10) : undefined;
+
     const etu = this.etudiantRepo.create({
       nom: dto.nom,
       prenom: dto.prenom,
       email: dto.email,
       cin: dto.cin,
+      password: hashedPassword,
+      mustChangePassword: true,
       classe,
     });
     return this.etudiantRepo.save(etu);

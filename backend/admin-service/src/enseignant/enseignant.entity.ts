@@ -31,6 +31,15 @@ export class Enseignant {
   telephone: string;
 
   @Column({ nullable: true })
+  password: string;  // Mot de passe haché (bcrypt)
+
+  @Column({ default: true })
+  mustChangePassword: boolean;  // Force changement de mot de passe au 1er login
+
+  @Column({ default: 'enseignant' })
+  role: string;  // 'enseignant' ou 'directeur_departement'
+
+  @Column({ nullable: true })
   grade: string;
 
   // Validation avant insertion/mise à jour

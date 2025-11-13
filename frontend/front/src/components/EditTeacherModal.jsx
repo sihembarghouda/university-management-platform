@@ -11,6 +11,7 @@ const EditTeacherModal = ({ isOpen, onClose, onTeacherUpdated, teacher }) => {
     cin: '',
     telephone: '',
     grade: '',
+    role: 'enseignant',
     departementId: '',
     specialiteEnseignementId: ''
   });
@@ -31,6 +32,7 @@ const EditTeacherModal = ({ isOpen, onClose, onTeacherUpdated, teacher }) => {
         cin: teacher.cin || '',
         telephone: teacher.telephone || '',
         grade: teacher.grade || '',
+        role: teacher.role || 'enseignant',
         departementId: teacher.departementId || teacher.departement?.id || '',
         specialiteEnseignementId: teacher.specialiteEnseignementId || teacher.specialiteEnseignement?.id || ''
       });
@@ -124,6 +126,7 @@ const EditTeacherModal = ({ isOpen, onClose, onTeacherUpdated, teacher }) => {
       cin: '',
       telephone: '',
       grade: '',
+      role: 'enseignant',
       departementId: '',
       specialiteEnseignementId: ''
     });
@@ -225,6 +228,21 @@ const EditTeacherModal = ({ isOpen, onClose, onTeacherUpdated, teacher }) => {
             </select>
           </div>
 
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Rôle *</label>
+            <select
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="enseignant">Enseignant</option>
+              <option value="directeur_departement">Directeur de Département</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Département *</label>
             {loadingDepartments ? (

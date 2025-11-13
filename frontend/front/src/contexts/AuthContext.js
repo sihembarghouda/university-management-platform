@@ -43,8 +43,17 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await axios.post("/auth/login", { email, password });
 
+      // Vérifier si changement de mot de passe requis
+      if (response.data.mustChangePassword) {
+        return {
+          success: false,
+          mustChangePassword: true,
+          message: response.data.message || 'Changement de mot de passe requis',
+        };
+      }
+
       if (response.data.success) {
-        const { user: userData, token } = response.data;
+        const { user: userData, token, type } = response.data;
 
         localStorage.setItem("token", token);
         localStorage.setItem("user", JSON.stringify(userData));
@@ -53,8 +62,13 @@ export const AuthProvider = ({ children }) => {
         setIsAuthenticated(true);
         axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
-        return { success: true, user: userData };
+        return { success: true, user: userData, type };
       }
+
+      return {
+        success: false,
+        message: response.data.message || "Erreur de connexion",
+      };
     } catch (error) {
       console.error("Login error:", error);
       return {
@@ -96,7 +110,7 @@ export const AuthProvider = ({ children }) => {
       });
 
       if (response.data.success) {
-        const { user: userData, token } = response.data;
+        const { user: userData, token, type } = response.data;
 
         localStorage.setItem("token", token);
         localStorage.setItem("user", JSON.stringify(userData));
@@ -104,8 +118,13 @@ export const AuthProvider = ({ children }) => {
         setIsAuthenticated(true);
         axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
-        return { success: true, user: userData };
+        return { success: true, user: userData, type };
       }
+
+      return {
+        success: false,
+        message: response.data.message || "Erreur lors du changement de mot de passe",
+      };
     } catch (error) {
       return {
         success: false,
@@ -116,11 +135,34 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const updateUser = (updatedUserData) => {
-    const updatedUser = { ...user, ...updatedUserData };
-    setUser(updatedUser);
-    localStorage.setItem("user", JSON.stringify(updatedUser));
-    return { success: true };
+  const updateUser = async (updatedUserData) => {
+    try {
+      const response = await axios.post("/auth/update-profile", {
+        email: user.email,
+        nom: updatedUserData.nom,
+        prenom: updatedUserData.prenom,
+        cin: updatedUserData.cin,
+      });
+
+      if (response.data.success) {
+        const updatedUser = response.data.user;
+        setUser(updatedUser);
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        return { success: true, user: updatedUser };
+      }
+
+      return {
+        success: false,
+        message: response.data.message || "Erreur lors de la mise à jour du profil",
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message:
+          error.response?.data?.message ||
+          "Erreur lors de la mise à jour du profil",
+      };
+    }
   };
 
   const value = {

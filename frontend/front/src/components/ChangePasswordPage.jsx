@@ -85,7 +85,8 @@ const ChangePasswordPage = () => {
 
       if (result.success) {
         setSuccess(MESSAGES.SUCCESS);
-        redirectToDashboard(result.user?.role);
+        const userType = result.type || result.user?.role;
+        redirectToDashboard(userType);
       } else {
         setError(result.message);
       }

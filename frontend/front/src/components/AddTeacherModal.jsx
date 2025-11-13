@@ -8,7 +8,10 @@ const AddTeacherModal = ({ isOpen, onClose, onTeacherAdded }) => {
     nom: '',
     prenom: '',
     email: '',
+    cin: '',
+    telephone: '',
     grade: '',
+    role: 'enseignant',
     departementId: '',
     specialiteEnseignementId: ''
   });
@@ -136,7 +139,10 @@ const AddTeacherModal = ({ isOpen, onClose, onTeacherAdded }) => {
         nom: '',
         prenom: '',
         email: '',
+        cin: '',
+        telephone: '',
         grade: '',
+        role: 'enseignant',
         departementId: '',
         specialiteEnseignementId: ''
       });
@@ -209,6 +215,37 @@ const AddTeacherModal = ({ isOpen, onClose, onTeacherAdded }) => {
           {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
         </div>
 
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              CIN
+            </label>
+            <input
+              type="text"
+              name="cin"
+              value={formData.cin}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              placeholder="12345678"
+              maxLength="8"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Téléphone
+            </label>
+            <input
+              type="tel"
+              name="telephone"
+              value={formData.telephone}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              placeholder="20123456"
+            />
+          </div>
+        </div>
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Grade <span className="text-red-500">*</span>
@@ -233,6 +270,21 @@ const AddTeacherModal = ({ isOpen, onClose, onTeacherAdded }) => {
             </select>
           )}
           {errors.grade && <p className="text-red-500 text-sm mt-1">{errors.grade}</p>}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Rôle <span className="text-red-500">*</span>
+          </label>
+          <select
+            name="role"
+            value={formData.role}
+            onChange={handleChange}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            <option value="enseignant">Enseignant</option>
+            <option value="directeur_departement">Directeur de Département</option>
+          </select>
         </div>
 
         <div>

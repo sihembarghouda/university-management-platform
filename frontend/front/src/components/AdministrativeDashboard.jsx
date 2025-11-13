@@ -57,7 +57,7 @@ const AdminDashboard = () => {
     nom: user?.nom || '',
     prenom: user?.prenom || '',
     email: user?.email || '',
-    telephone: user?.telephone || '',
+    cin: user?.cin || '',
     role: user?.role || 'Administrateur'
   });
 
@@ -68,7 +68,7 @@ const AdminDashboard = () => {
         nom: user.nom || '',
         prenom: user.prenom || '',
         email: user.email || '',
-        telephone: user.telephone || '',
+        cin: user.cin || '',
         role: user.role || 'Administrateur'
       });
     }
@@ -853,16 +853,16 @@ const AdminDashboard = () => {
       setProfileData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSave = () => {
-      // Mettre à jour le contexte utilisateur
-      const result = updateUser(profileData);
+    const handleSave = async () => {
+      // Mettre à jour le contexte utilisateur via l'API
+      const result = await updateUser(profileData);
       
       if (result.success) {
         setIsEditingProfile(false);
         alert('✅ Profil mis à jour avec succès!');
-        console.log('Profil sauvegardé:', profileData);
+        console.log('Profil sauvegardé:', result.user);
       } else {
-        alert('❌ Erreur lors de la mise à jour du profil');
+        alert('❌ ' + (result.message || 'Erreur lors de la mise à jour du profil'));
       }
     };
 
@@ -942,12 +942,13 @@ const AdminDashboard = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Téléphone</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">CIN</label>
                 <input
-                  type="tel"
-                  name="telephone"
-                  value={profileData.telephone}
+                  type="text"
+                  name="cin"
+                  value={profileData.cin}
                   onChange={handleChange}
+                  maxLength="8"
                   disabled={!isEditingProfile}
                   className={`w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                     !isEditingProfile ? 'bg-gray-50 text-gray-600' : ''
