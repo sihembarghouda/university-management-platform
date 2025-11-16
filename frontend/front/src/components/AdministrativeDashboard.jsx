@@ -1602,8 +1602,8 @@ const AdminDashboard = () => {
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <h4 className="text-xl font-bold text-gray-800 mb-1">{m.nom}</h4>
-                  <p className="text-sm text-gray-600">Code: {m.code}</p>
-                  <p className="text-sm text-gray-500">Classe: {m.classe?.nom || '—'}</p>
+                  <p className="text-sm text-gray-600">Spécialité: {m.specialite?.nom || m.classe?.specialite?.nom || '—'}</p>
+                  <p className="text-sm text-gray-500">Niveau: {m.niveau?.nom || m.classe?.niveau?.nom || '—'}</p>
                   <p className="text-sm text-gray-500">Département: {m.departement?.nom || '—'}</p>
                 </div>
                 <div className="flex gap-2">
@@ -1687,7 +1687,7 @@ const AdminDashboard = () => {
                               <div key={m.id} className="p-3 border border-gray-200 rounded hover:shadow-sm flex items-start justify-between">
                                 <div>
                                   <div className="font-medium">{m.nom}</div>
-                                  <div className="text-xs text-gray-500">{m.code} — Classe: {m.classe?.nom || '—'}</div>
+                                  <div className="text-xs text-gray-500">Spécialité: {m.specialite?.nom || m.classe?.specialite?.nom || '—'} — Niveau: {m.niveau?.nom || m.classe?.niveau?.nom || '—'}</div>
                                 </div>
                                 <div className="flex gap-2">
                                   <button onClick={() => handleOpenEditMatiere(m)} className="p-2 text-blue-600 hover:bg-blue-50 rounded" title="Modifier"><Edit size={16} /></button>
