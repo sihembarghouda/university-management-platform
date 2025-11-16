@@ -18,7 +18,7 @@ import { MatiereModule } from './matiere/matiere.module';
       host: 'localhost',
       port: 5432,
       username: 'postgres',
-      password: '1234',
+      password: '123456789',
       database: 'university_db',
       autoLoadEntities: true,
       synchronize: true, // <--- très important pour créer les tables automatiquement

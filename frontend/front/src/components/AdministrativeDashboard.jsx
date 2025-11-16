@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { LayoutDashboard, Users, BookOpen, Building2, UserCheck, FileText, Bell, Menu, X, TrendingUp, AlertCircle, Plus, Edit, Trash2, Search, Loader, LogOut, User, Mail, Send, Inbox, Archive } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { departementService, enseignantService, etudiantService, classeService } from '../services/adminServices';
+import { departementService, enseignantService, etudiantService, classeService, salleService, matiereService, specialiteService } from '../services/adminServices';
 import AddStudentModal from './AddStudentModal';
 import AddTeacherModal from './AddTeacherModal';
 import AddDepartmentModal from './AddDepartmentModal';
@@ -11,6 +11,10 @@ import EditStudentModal from './EditStudentModal';
 import EditTeacherModal from './EditTeacherModal';
 import EditDepartmentModal from './EditDepartmentModal';
 import EditClasseModal from './EditClasseModal';
+import AddSalleModal from './AddSalleModal';
+import EditSalleModal from './EditSalleModal';
+import AddMatiereModal from './AddMatiereModal';
+import EditMatiereModal from './EditMatiereModal';
 import { BarChart, PieChart, LineChart, StatCard } from './Charts';
 
 const AdminDashboard = () => {
@@ -26,12 +30,18 @@ const AdminDashboard = () => {
   const [showAddTeacherModal, setShowAddTeacherModal] = useState(false);
   const [showAddDepartmentModal, setShowAddDepartmentModal] = useState(false);
   const [showAddClasseModal, setShowAddClasseModal] = useState(false);
+  const [showEditStudentModal, setShowEditStudentModal] = useState(false);
   
   // États pour les modaux de modification
-  const [showEditStudentModal, setShowEditStudentModal] = useState(false);
   const [showEditTeacherModal, setShowEditTeacherModal] = useState(false);
   const [showEditDepartmentModal, setShowEditDepartmentModal] = useState(false);
   const [showEditClasseModal, setShowEditClasseModal] = useState(false);
+  const [showAddSalleModal, setShowAddSalleModal] = useState(false);
+  const [showEditSalleModal, setShowEditSalleModal] = useState(false);
+  const [selectedSalle, setSelectedSalle] = useState(null);
+  const [showAddMatiereModal, setShowAddMatiereModal] = useState(false);
+  const [showEditMatiereModal, setShowEditMatiereModal] = useState(false);
+  const [selectedMatiere, setSelectedMatiere] = useState(null);
   
   // États pour les éléments sélectionnés
   const [selectedStudent, setSelectedStudent] = useState(null);
@@ -44,22 +54,32 @@ const AdminDashboard = () => {
     students: 0,
     teachers: 0,
     departments: 0,
-    classes: 0
+    classes: 0,
+    salles: 0,
+    matieres: 0
   });
   const [studentsData, setStudentsData] = useState([]);
   const [teachersData, setTeachersData] = useState([]);
   const [departmentsData, setDepartmentsData] = useState([]);
   const [classesData, setClassesData] = useState([]);
+  const [specialitesData, setSpecialitesData] = useState([]);
+  const [sallesData, setSallesData] = useState([]);
+  const [matieresData, setMatieresData] = useState([]);
   const [studentSearchTerm, setStudentSearchTerm] = useState('');
   const [teacherSearchTerm, setTeacherSearchTerm] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDepartmentFilter, setSelectedDepartmentFilter] = useState('');
   const [selectedClasseFilter, setSelectedClasseFilter] = useState('');
+  const [matieresViewMode, setMatieresViewMode] = useState('list'); // 'list' or 'grouped'
+  const [selectedDepartementForMatiere, setSelectedDepartementForMatiere] = useState('');
+  const [selectedSpecialiteFilter, setSelectedSpecialiteFilter] = useState('');
+  const [selectedNiveauFilter, setSelectedNiveauFilter] = useState('');
+  const [classesViewMode, setClassesViewMode] = useState('list'); // 'list' | 'grouped'
+  const [classSearchTerm, setClassSearchTerm] = useState('');
 
   // États pour les notifications
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
-
   // États pour la messagerie
   const [messages, setMessages] = useState([]);
   const [unreadMessages, setUnreadMessages] = useState(0);
@@ -93,6 +113,7 @@ const AdminDashboard = () => {
     }
   }, [user]);
 
+  
   // Fonction pour charger les activités récentes
   const loadRecentActivities = () => {
     try {
@@ -111,6 +132,55 @@ const AdminDashboard = () => {
       }
     } catch (error) {
       console.error('Erreur lors du chargement des activités:', error);
+    }
+  };
+
+  // Handlers for salle/matiere CRUD UI
+  const handleOpenAddSalle = () => setShowAddSalleModal(true);
+  const handleCloseAddSalle = () => setShowAddSalleModal(false);
+  const handleOpenEditSalle = (salle) => { setSelectedSalle(salle); setShowEditSalleModal(true); };
+  const handleCloseEditSalle = () => { setSelectedSalle(null); setShowEditSalleModal(false); };
+
+  const handleSavedSalle = (salle) => {
+    loadSalles();
+    loadDashboardStats();
+    addActivity('alert', `Salle enregistrée: ${salle.nom}`);
+  };
+
+  const handleDeleteSalle = async (id) => {
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer cette salle ?')) return;
+    const res = await salleService.delete(id);
+    if (res.success) {
+      loadSalles();
+      loadDashboardStats();
+      addActivity('alert', `Salle supprimée (id:${id})`);
+      alert('Salle supprimée');
+    } else {
+      alert('Erreur: ' + (res.message || 'Impossible de supprimer'));
+    }
+  };
+
+  const handleOpenAddMatiere = () => setShowAddMatiereModal(true);
+  const handleCloseAddMatiere = () => setShowAddMatiereModal(false);
+  const handleOpenEditMatiere = (m) => { setSelectedMatiere(m); setShowEditMatiereModal(true); };
+  const handleCloseEditMatiere = () => { setSelectedMatiere(null); setShowEditMatiereModal(false); };
+
+  const handleSavedMatiere = (m) => {
+    loadMatieres();
+    loadDashboardStats();
+    addActivity('alert', `Matière enregistrée: ${m.nom}`);
+  };
+
+  const handleDeleteMatiere = async (id) => {
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer cette matière ?')) return;
+    const res = await matiereService.delete(id);
+    if (res.success) {
+      loadMatieres();
+      loadDashboardStats();
+      addActivity('alert', `Matière supprimée (id:${id})`);
+      alert('Matière supprimée');
+    } else {
+      alert('Erreur: ' + (res.message || 'Impossible de supprimer'));
     }
   };
 
@@ -155,6 +225,10 @@ const AdminDashboard = () => {
     // Charger départements et classes pour les filtres
     loadDepartments();
     loadClasses();
+    loadSpecialites();
+    // Charger salles et matières
+    loadSalles();
+    loadMatieres();
     // Charger les étudiants et enseignants pour la messagerie
     loadStudents();
     loadRecentActivities();
@@ -325,6 +399,12 @@ const AdminDashboard = () => {
       case 'subjects':
         loadClasses();
         break;
+      case 'salles':
+        loadSalles();
+        break;
+      case 'matieres':
+        loadMatieres();
+        break;
       default:
         break;
     }
@@ -337,11 +417,13 @@ const AdminDashboard = () => {
       setError(null);
       
       // Charger les données directement
-      const [deptsData, ensData, etuData, classesData] = await Promise.all([
+      const [deptsData, ensData, etuData, classesData, sallesDataRes, matieresDataRes] = await Promise.all([
         departementService.getAll().catch(() => []),
         enseignantService.getAll().catch(() => ({ success: false, data: [] })),
         etudiantService.getAll().catch(() => ({ success: false, data: [] })),
-        classeService.getAll().catch(() => [])
+        classeService.getAll().catch(() => []),
+        salleService.getAll().catch(() => []),
+        matiereService.getAll().catch(() => [])
       ]);
 
       // Gérer le format { value: [...] } ou tableau direct
@@ -350,18 +432,25 @@ const AdminDashboard = () => {
       const etuArray = etuData.success ? (etuData.data || []) : (Array.isArray(etuData) ? etuData : (etuData.value || []));
       const classesArray = Array.isArray(classesData) ? classesData : (classesData.value || classesData.data || []);
 
+      const sallesArray = Array.isArray(sallesDataRes) ? sallesDataRes : (sallesDataRes.value || []);
+      const matieresArray = Array.isArray(matieresDataRes) ? matieresDataRes : (matieresDataRes.value || []);
+
       setStats({
         students: etuArray.length || 0,
         teachers: ensArray.length || 0,
         departments: deptsArray.length || 0,
-        classes: classesArray.length || 0
+        classes: classesArray.length || 0,
+        salles: sallesArray.length || 0,
+        matieres: matieresArray.length || 0
       });
       
       console.log('📊 Statistiques chargées:', {
         students: etuArray.length,
         teachers: ensArray.length,
         departments: deptsArray.length,
-        classes: classesArray.length
+        classes: classesArray.length,
+        salles: sallesArray.length,
+        matieres: matieresArray.length
       });
     } catch (err) {
       console.error('❌ Erreur chargement stats:', err);
@@ -502,6 +591,72 @@ const AdminDashboard = () => {
     }
   };
 
+  // Fonction pour charger les spécialités (utiliser l'endpoint /specialite)
+  const loadSpecialites = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      console.log('🔄 Chargement des spécialités...');
+      const data = await specialiteService.getAll();
+      const arr = Array.isArray(data) ? data : (data.value || data.data || []);
+      setSpecialitesData(arr);
+      console.log('✅ Spécialités chargées:', arr.length);
+    } catch (err) {
+      console.error('❌ Erreur chargement spécialités:', err);
+      setError('Erreur lors du chargement des spécialités');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fonction pour charger les salles
+  const loadSalles = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      console.log('🔄 Chargement des salles...');
+      const previousIds = sallesData.map(s => s.id);
+      const data = await salleService.getAll();
+      console.log('📥 Résultat salles:', data);
+      const sallesArray = Array.isArray(data) ? data : (data.value || []);
+      setSallesData(sallesArray);
+      console.log('✅ Salles chargées:', sallesArray.length);
+      if (previousIds.length > 0) {
+        const newSalles = sallesArray.filter(s => !previousIds.includes(s.id));
+        newSalles.forEach(ns => addActivity('alert', `Nouvelle salle: ${ns.nom}`));
+      }
+    } catch (err) {
+      console.error('❌ Erreur chargement salles:', err);
+      setError('Erreur lors du chargement des salles');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fonction pour charger les matières
+  const loadMatieres = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      console.log('🔄 Chargement des matières...');
+      const previousIds = matieresData.map(m => m.id);
+      const data = await matiereService.getAll();
+      console.log('📥 Résultat matieres:', data);
+      const matieresArray = Array.isArray(data) ? data : (data.value || []);
+      setMatieresData(matieresArray);
+      console.log('✅ Matières chargées:', matieresArray.length);
+      if (previousIds.length > 0) {
+        const newMatieres = matieresArray.filter(m => !previousIds.includes(m.id));
+        newMatieres.forEach(nm => addActivity('alert', `Nouvelle matière: ${nm.nom}`));
+      }
+    } catch (err) {
+      console.error('❌ Erreur chargement matières:', err);
+      setError('Erreur lors du chargement des matières');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Fonction pour supprimer un étudiant
   const handleDeleteStudent = async (id) => {
     if (!window.confirm('Êtes-vous sûr de vouloir supprimer cet étudiant ?')) return;
@@ -615,6 +770,8 @@ const AdminDashboard = () => {
     { id: 'teachers', label: 'Enseignants', icon: UserCheck },
     { id: 'departments', label: 'Départements', icon: Building2 },
     { id: 'subjects', label: 'Classes', icon: BookOpen },
+    { id: 'matieres', label: 'Matières', icon: BookOpen },
+    { id: 'salles', label: 'Salles', icon: Building2 },
     { id: 'reports', label: 'Rapports', icon: FileText },
     { id: 'messages', label: 'Messagerie', icon: Mail },
     { id: 'notifications', label: 'Notifications', icon: Bell },
@@ -633,7 +790,7 @@ const AdminDashboard = () => {
     let matchesClasse = true;
     if (selectedClasseFilter) {
       const classeId = typeof student.classe === 'object' ? student.classe?.id : student.classe;
-      matchesClasse = classeId == selectedClasseFilter;
+      matchesClasse = String(classeId) === String(selectedClasseFilter);
     }
     
     return matchesSearch && matchesClasse;
@@ -651,7 +808,125 @@ const AdminDashboard = () => {
     dept.nom?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Deriver la liste des spécialités disponibles (depuis `classesData`)
+  const specialitesList = (() => {
+    // Prefer using the dedicated spécialité endpoint when available
+    if (specialitesData && specialitesData.length) return specialitesData;
+
+    const map = new Map();
+    // Prefer specialités provenant des classes si présentes
+    classesData.forEach(c => {
+      const s = c.specialite || (c.specialite === undefined ? null : c.specialite);
+      if (s && s.id && !map.has(s.id)) map.set(s.id, s);
+    });
+    // Fallback: extraire les spécialités référencées par les matières (si classes n'ont pas été peuplées avec specialite)
+    matieresData.forEach(m => {
+      const s = m.specialite || (m.classe && m.classe.specialite) || null;
+      if (s && s.id && !map.has(s.id)) map.set(s.id, s);
+    });
+    return Array.from(map.values());
+  })();
+
+  // Liste des niveaux dérivée
+  const niveauxList = (() => {
+    const map = new Map();
+    // essayer matieresData puis classesData
+    matieresData.forEach(m => {
+      const n = m.niveau || m.classe?.niveau;
+      if (n && n.id && !map.has(n.id)) map.set(n.id, n);
+    });
+    classesData.forEach(c => {
+      const n = c.niveau;
+      if (n && n.id && !map.has(n.id)) map.set(n.id, n);
+    });
+    return Array.from(map.values());
+  })();
+
+  // Map classeId -> specialite/niveau inferred from matieres (fallback when classe.specialite/niveau are null)
+  const classSpecialiteMap = (() => {
+    const m = new Map();
+    matieresData.forEach(mat => {
+      const cid = mat.classe?.id || (mat.classe ? (typeof mat.classe === 'number' ? mat.classe : mat.classe.id) : null);
+      if (!cid) return;
+      const key = String(cid);
+      if (mat.specialite) m.set(key, mat.specialite);
+      else if (mat.classe?.specialite) m.set(key, mat.classe.specialite);
+    });
+    return m;
+  })();
+
+  const classNiveauMap = (() => {
+    const m = new Map();
+    matieresData.forEach(mat => {
+      const cid = mat.classe?.id || (mat.classe ? (typeof mat.classe === 'number' ? mat.classe : mat.classe.id) : null);
+      if (!cid) return;
+      const key = String(cid);
+      if (mat.niveau) m.set(key, mat.niveau);
+      else if (mat.classe?.niveau) m.set(key, mat.classe.niveau);
+    });
+    return m;
+  })();
+
+  // Also build name-based maps in case matiere.classe references only name or classe.specialite is missing
+  const classSpecialiteMapByName = (() => {
+    const m = new Map();
+    matieresData.forEach(mat => {
+      const cname = mat.classe?.nom || (mat.classe && typeof mat.classe === 'string' ? mat.classe : null);
+      const spec = mat.specialite || mat.classe?.specialite || null;
+      if (!cname || !spec) return;
+      const key = String(cname).trim();
+      if (!m.has(key)) m.set(key, spec);
+    });
+    return m;
+  })();
+
+  const classNiveauMapByName = (() => {
+    const m = new Map();
+    matieresData.forEach(mat => {
+      const cname = mat.classe?.nom || (mat.classe && typeof mat.classe === 'string' ? mat.classe : null);
+      const niv = mat.niveau || mat.classe?.niveau || null;
+      if (!cname || !niv) return;
+      const key = String(cname).trim();
+      if (!m.has(key)) m.set(key, niv);
+    });
+    return m;
+  })();
+
+  // Filtrer les matières selon la recherche, la classe, le département et la spécialité sélectionnés
+  const filteredMatieres = matieresData.filter(m => {
+    const q = searchTerm?.toLowerCase() || '';
+    const matchesSearch = !q || (m.nom && m.nom.toLowerCase().includes(q)) || (m.code && m.code.toLowerCase().includes(q));
+
+    // (Ne pas filtrer par classe ici — le filtre de classe est utilisé pour les étudiants seulement)
+    const matchesClasse = true;
+
+    // Filtre département
+    let matchesDept = true;
+    if (selectedDepartementForMatiere) {
+      const deptId = m.departement?.id || (m.classe?.specialite?.departement?.id) || (m.specialite?.departement?.id);
+      matchesDept = String(deptId) === String(selectedDepartementForMatiere);
+    }
+
+    // Filtre spécialité
+    let matchesSpec = true;
+    if (selectedSpecialiteFilter) {
+      const specId = m.specialite?.id || m.classe?.specialite?.id;
+      matchesSpec = String(specId) === String(selectedSpecialiteFilter);
+    }
+
+    // Filtre niveau
+    let matchesNiv = true;
+    if (selectedNiveauFilter) {
+      const nivId = m.niveau?.id || m.classe?.niveau?.id;
+      matchesNiv = String(nivId) === String(selectedNiveauFilter);
+    }
+
+    return matchesSearch && matchesClasse && matchesDept && matchesSpec && matchesNiv;
+  });
+
   // Rendu du Dashboard
+  // helper to pluralize 'matière'
+  const s = (n) => (n > 1 ? 's' : '');
   const renderDashboard = () => {
     // Données pour les graphiques
     const statsBarData = [
@@ -668,13 +943,13 @@ const AdminDashboard = () => {
         // Trouver la classe de l'étudiant et son département via spécialité
         const classe = classesData.find(c => {
           const classeId = typeof s.classe === 'object' ? s.classe?.id : s.classe;
-          return c.id == classeId;
+          return String(c.id) === String(classeId);
         });
         if (!classe) return false;
         const specialite = classe.specialite;
         if (!specialite) return false;
         const deptId = typeof specialite.departement === 'object' ? specialite.departement?.id : specialite.departement;
-        return deptId == dept.id;
+        return String(deptId) === String(dept.id);
       }).length
     })).filter(item => item.value > 0);
 
@@ -685,7 +960,7 @@ const AdminDashboard = () => {
         const specialite = c.specialite;
         if (!specialite) return false;
         const deptId = typeof specialite.departement === 'object' ? specialite.departement?.id : specialite.departement;
-        return deptId == dept.id;
+        return String(deptId) === String(dept.id);
       }).length
     })).filter(item => item.value > 0);
 
@@ -693,7 +968,7 @@ const AdminDashboard = () => {
       label: dept.nom,
       value: teachersData.filter(t => {
         const deptId = typeof t.departement === 'object' ? t.departement?.id : t.departement;
-        return deptId == dept.id;
+        return String(deptId) === String(dept.id);
       }).length
     })).filter(item => item.value > 0);
 
@@ -1062,6 +1337,8 @@ const AdminDashboard = () => {
         </button>
       </div>
 
+      {/* Classes listing and filters (mirrors Matières behavior; no debug panel) */}
+
       {loading ? (
         <div className="flex justify-center py-12">
           <Loader className="animate-spin text-blue-600" size={40} />
@@ -1072,29 +1349,401 @@ const AdminDashboard = () => {
           <p>Aucune classe trouvée</p>
         </div>
       ) : (
+            <>
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+                <div className="flex items-center gap-3 w-full md:w-1/2">
+                  <input
+                    type="text"
+                    placeholder="Rechercher classe ..."
+                    value={classSearchTerm}
+                    onChange={(e) => setClassSearchTerm(e.target.value)}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                  />
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="inline-flex bg-gray-50 border border-gray-200 rounded-lg">
+                    <button
+                      onClick={() => setClassesViewMode('list')}
+                      className={`px-3 py-2 text-sm ${classesViewMode === 'list' ? 'bg-white text-gray-800' : 'text-gray-600'}`}
+                    >
+                      Liste
+                    </button>
+                    <button
+                      onClick={() => setClassesViewMode('grouped')}
+                      className={`px-3 py-2 text-sm ${classesViewMode === 'grouped' ? 'bg-white text-gray-800' : 'text-gray-600'}`}
+                    >
+                      Groupé
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* compute filtered classes */}
+              {(() => {
+                const q = classSearchTerm?.toLowerCase() || '';
+
+                // Disable department/specialite/niveau filtering for classes: show full classes list
+                const visibleClasses = classesData;
+
+                // (filters disabled)
+
+                const filtered = visibleClasses.filter(c => {
+                  const matchesSearch = !q || (c.nom && c.nom.toLowerCase().includes(q)) || (c.code && c.code.toLowerCase().includes(q));
+
+                  // Resolve specialite/niveau from classe or fallback maps
+                  const resolvedSpecialite = c.specialite || classSpecialiteMap.get(String(c.id)) || classSpecialiteMapByName.get(String(c.nom || '').trim()) || null;
+                  const resolvedNiveau = c.niveau || classNiveauMap.get(String(c.id)) || classNiveauMapByName.get(String(c.nom || '').trim()) || null;
+
+                  // Filtre département: disabled — always include
+                  const matchesDept = true;
+
+                  // Spécialité / niveau filters removed: always include
+                  const matchesSpec = true;
+                  const matchesNiv = true;
+
+                  return matchesSearch && matchesDept && matchesSpec && matchesNiv;
+                });
+
+                if (classesViewMode === 'list') {
+                  return (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {filtered.map(classe => {
+                        const resolvedSpecialite = classe.specialite || classSpecialiteMap.get(String(classe.id)) || classSpecialiteMapByName.get(String(classe.nom || '').trim()) || null;
+                        const resolvedNiveau = classe.niveau || classNiveauMap.get(String(classe.id)) || classNiveauMapByName.get(String(classe.nom || '').trim()) || null;
+                        const deptName = resolvedSpecialite?.departement?.nom || resolvedSpecialite?.departement || '';
+                        return (
+                        <div key={classe.id} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+                          <div className="flex items-start justify-between mb-4">
+                            <div>
+                              <h4 className="text-xl font-bold text-gray-800 mb-1">{classe.nom}</h4>
+                              {/* Spécialité / Niveau / Département intentionally removed per request */}
+                            </div>
+                            <div className="flex gap-2">
+                              <button onClick={() => handleEditClasse(classe)} className="p-2 text-blue-600 hover:bg-blue-50 rounded" title="Modifier"><Edit size={18} /></button>
+                              <button onClick={() => handleDeleteClasse(classe.id)} className="p-2 text-red-600 hover:bg-red-50 rounded" title="Supprimer"><Trash2 size={18} /></button>
+                            </div>
+                          </div>
+                        </div>
+                      )})}
+                    </div>
+                  );
+                }
+
+                // grouped: group by specialite -> niveau
+                const groups = new Map();
+                filtered.forEach(c => {
+                  const resolvedSpecialite = c.specialite || classSpecialiteMap.get(String(c.id)) || classSpecialiteMapByName.get(String(c.nom || '').trim()) || null;
+                  const resolvedNiveau = c.niveau || classNiveauMap.get(String(c.id)) || classNiveauMapByName.get(String(c.nom || '').trim()) || null;
+                  const sKey = resolvedSpecialite ? `spec-${resolvedSpecialite.id}` : 'spec-null';
+                  if (!groups.has(sKey)) groups.set(sKey, { specialite: resolvedSpecialite, niveaux: new Map() });
+                  const g = groups.get(sKey);
+                  const nKey = resolvedNiveau ? `niv-${resolvedNiveau.id}` : 'niv-null';
+                  if (!g.niveaux.has(nKey)) g.niveaux.set(nKey, { niveau: resolvedNiveau, items: [] });
+                  g.niveaux.get(nKey).items.push(c);
+                });
+
+                return (
+                  <div className="space-y-6">
+                    {Array.from(groups.values()).map(g => {
+                      // helper to parse a numeric level from niveau name (same logic as matieres)
+                      const parseLevel = (name) => {
+                        if (!name) return 999;
+                        const mnum = name.match(/(\d+)/);
+                        if (mnum) return parseInt(mnum[1], 10);
+                        const lower = name.toLowerCase();
+                        if (lower.includes('prem') || lower.includes('1er') || lower.includes('1re')) return 1;
+                        if (lower.includes('deux') || lower.includes('2') || lower.includes('2eme')) return 2;
+                        if (lower.includes('trois') || lower.includes('3') || lower.includes('3eme')) return 3;
+                        return 999;
+                      };
+
+                      const niveauxArr = Array.from(g.niveaux.values());
+                      const sortedNiveaux = niveauxArr.sort((a, b) => {
+                        const na = parseLevel(a.niveau?.nom);
+                        const nb = parseLevel(b.niveau?.nom);
+                        if (na !== nb) return na - nb;
+                        return (a.niveau?.nom || '').localeCompare(b.niveau?.nom || '');
+                      });
+
+                      return (
+                        <div key={g.specialite?.id ?? 'spec-null'} className="bg-gray-50 border border-gray-100 rounded-lg p-4">
+                          <h4 className="text-lg font-semibold text-gray-800 mb-3">{g.specialite?.nom ?? ''}</h4>
+                          {sortedNiveaux.map(nObj => (
+                            <div key={nObj.niveau?.id ?? 'niv-null'} className="mb-4">
+                              <div className="text-sm text-gray-600 font-medium mb-2">{nObj.niveau?.nom ?? 'Classes'} <span className="text-xs text-gray-500">({nObj.items.length})</span></div>
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {nObj.items
+                                  .sort((x, y) => (x.nom || '').localeCompare(y.nom || ''))
+                                  .map(cl => (
+                                  <div key={cl.id} className="border border-gray-200 rounded-lg p-4">
+                                    <div className="flex items-start justify-between">
+                                      <div className="font-medium text-gray-800">{cl.nom}</div>
+                                      <div className="flex gap-2">
+                                        <button onClick={() => handleEditClasse(cl)} className="p-1 text-blue-600 hover:bg-blue-50 rounded" title="Modifier"><Edit size={16} /></button>
+                                        <button onClick={() => handleDeleteClasse(cl.id)} className="p-1 text-red-600 hover:bg-red-50 rounded" title="Supprimer"><Trash2 size={16} /></button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+            </>
+      )}
+    </div>
+  );
+
+  // Rendu de la page Matières
+  const renderMatieres = () => (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-2xl font-bold text-gray-800">Gestion des Matières</h3>
+        <div className="flex items-center gap-3">
+          <button onClick={() => handleOpenAddMatiere()} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+            <Plus size={18} />
+            Ajouter matière
+          </button>
+        </div>
+      </div>
+
+      {/* Controls: recherche, filtre par classe, mode d'affichage */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+        <div className="flex items-center gap-3 w-full md:w-1/2">
+          <input
+            type="text"
+            placeholder="Rechercher matière ou code..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+          />
+        </div>
+
+        <div className="flex items-center gap-3">
+          <select
+            value={selectedDepartementForMatiere}
+            onChange={(e) => { setSelectedDepartementForMatiere(e.target.value); setSelectedSpecialiteFilter(''); }}
+            className="border border-gray-200 rounded-lg px-3 py-2 text-sm"
+          >
+            <option value="">Tous départements</option>
+            {departmentsData.map(d => (
+              <option key={d.id} value={d.id}>{d.nom}</option>
+            ))}
+          </select>
+
+          <select
+            value={selectedSpecialiteFilter}
+            onChange={(e) => setSelectedSpecialiteFilter(e.target.value)}
+            className="border border-gray-200 rounded-lg px-3 py-2 text-sm"
+          >
+            <option value="">Toutes spécialités</option>
+            {(() => {
+              const opts = specialitesList
+                .filter(s => {
+                  if (!selectedDepartementForMatiere) return true;
+                  // robust department id extraction: support { departement: {id} } or departementId or departement scalar
+                  const sDept = s?.departement;
+                  const sDeptId = (sDept && (sDept.id ?? sDept)) ?? (s.departementId ?? s.departement) ?? null;
+                  return String(sDeptId) === String(selectedDepartementForMatiere);
+                })
+                .map(s => ({ id: s?.id ?? s, nom: s?.nom ?? s?.code ?? (`Specialite ${s?.id ?? s}`) }));
+              if (opts.length === 0) return <option value="">(Aucune spécialité)</option>;
+              return opts.map(s => <option key={s.id} value={s.id}>{s.nom}</option>);
+            })()}
+          </select>
+
+          <select
+            value={selectedNiveauFilter}
+            onChange={(e) => setSelectedNiveauFilter(e.target.value)}
+            className="border border-gray-200 rounded-lg px-3 py-2 text-sm"
+          >
+            <option value="">Tous niveaux</option>
+            {niveauxList.map(n => (
+              <option key={n.id} value={n.id}>{n.nom}</option>
+            ))}
+          </select>
+
+          {/* Classe filter removed for matières (not needed) */}
+
+          <div className="inline-flex bg-gray-50 border border-gray-200 rounded-lg">
+            <button
+              onClick={() => setMatieresViewMode('list')}
+              className={`px-3 py-2 text-sm ${matieresViewMode === 'list' ? 'bg-white text-gray-800' : 'text-gray-500'}`}
+              title="Liste"
+            >Liste</button>
+            <button
+              onClick={() => setMatieresViewMode('grouped')}
+              className={`px-3 py-2 text-sm ${matieresViewMode === 'grouped' ? 'bg-white text-gray-800' : 'text-gray-500'}`}
+              title="Groupé par spécialité"
+            >Groupé</button>
+          </div>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center py-12">
+          <Loader className="animate-spin text-blue-600" size={40} />
+        </div>
+      ) : filteredMatieres.length === 0 ? (
+        <div className="text-center py-12 text-gray-500">
+          <BookOpen size={40} className="mx-auto mb-4 text-gray-300" />
+          <p>Aucune matière trouvée</p>
+        </div>
+      ) : matieresViewMode === 'list' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {classesData.map((classe) => (
-            <div key={classe.id} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+          {filteredMatieres.map((m) => (
+            <div key={m.id} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
               <div className="flex items-start justify-between mb-4">
                 <div>
-                  <h4 className="text-xl font-bold text-gray-800 mb-1">{classe.nom}</h4>
-                  <p className="text-sm text-gray-600">Code: {classe.code}</p>
+                  <h4 className="text-xl font-bold text-gray-800 mb-1">{m.nom}</h4>
+                  <p className="text-sm text-gray-600">Code: {m.code}</p>
+                  <p className="text-sm text-gray-500">Classe: {m.classe?.nom || '—'}</p>
+                  <p className="text-sm text-gray-500">Département: {m.departement?.nom || '—'}</p>
                 </div>
                 <div className="flex gap-2">
-                  <button 
-                    onClick={() => handleEditClasse(classe)}
-                    className="p-2 text-blue-600 hover:bg-blue-50 rounded"
-                    title="Modifier"
-                  >
-                    <Edit size={18} />
-                  </button>
-                  <button 
-                    onClick={() => handleDeleteClasse(classe.id)}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded"
-                    title="Supprimer"
-                  >
-                    <Trash2 size={18} />
-                  </button>
+                  <button onClick={() => handleOpenEditMatiere(m)} className="p-2 text-blue-600 hover:bg-blue-50 rounded" title="Modifier"><Edit size={18} /></button>
+                  <button onClick={() => handleDeleteMatiere(m.id)} className="p-2 text-red-600 hover:bg-red-50 rounded" title="Supprimer"><Trash2 size={18} /></button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        // Grouped view by spécialité
+        <div className="space-y-6">
+          {(() => {
+            const groups = {};
+            filteredMatieres.forEach(m => {
+              const sname = m.specialite?.nom || m.classe?.specialite?.nom || '';
+              const sdept = m.specialite?.departement?.nom || m.classe?.specialite?.departement?.nom || m.departement?.nom || '';
+              const key = `${sname}|||${sdept}`;
+              if (!groups[key]) groups[key] = { name: sname, dept: sdept, items: [] };
+              groups[key].items.push(m);
+            });
+            return Object.keys(groups).map((key) => {
+              const g = groups[key];
+              // within each specialty group, group by niveau
+              const byNiveau = {};
+              g.items.forEach(m => {
+                const nivName = m.niveau?.nom || m.classe?.niveau?.nom || 'Sans niveau';
+                if (!byNiveau[nivName]) byNiveau[nivName] = [];
+                byNiveau[nivName].push(m);
+              });
+
+              // helper to parse a numeric level from niveau name (e.g., '1ere annee' -> 1)
+              const parseLevel = (name) => {
+                if (!name) return 999;
+                const mnum = name.match(/(\d+)/);
+                if (mnum) return parseInt(mnum[1], 10);
+                // match common french words
+                const lower = name.toLowerCase();
+                if (lower.includes('prem') || lower.includes('1er') || lower.includes('1re')) return 1;
+                if (lower.includes('deux') || lower.includes('2') || lower.includes('2eme')) return 2;
+                if (lower.includes('trois') || lower.includes('3') || lower.includes('3eme')) return 3;
+                return 999;
+              };
+
+              const sortedNiveaux = Object.keys(byNiveau).sort((a, b) => {
+                const na = parseLevel(a);
+                const nb = parseLevel(b);
+                if (na !== nb) return na - nb;
+                return a.localeCompare(b);
+              });
+
+              return (
+                <div key={key} className="border border-gray-100 rounded-lg">
+                  <div className="bg-gray-50 px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                    <div>
+                      <h4 className="font-semibold text-lg">Spécialité: {g.name}</h4>
+                      {g.dept && <div className="text-sm text-gray-500">Département: {g.dept}</div>}
+                    </div>
+                    <div className="text-sm text-gray-500">{g.items.length} matière(s)</div>
+                  </div>
+                  <div className="p-4 space-y-4">
+                    {sortedNiveaux.map(niv => (
+                      <div key={niv}>
+                        <div className="mb-3">
+                          <div className="flex items-center justify-between bg-white px-3 py-2 rounded-md border border-gray-100 shadow-sm">
+                            <div className="text-lg font-bold text-gray-800">Niveau: {niv}</div>
+                            <div className="text-sm text-gray-500">{byNiveau[niv].length} matière{s(byNiveau[niv].length)}</div>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                          {byNiveau[niv]
+                            .sort((x, y) => {
+                              // sort items by parsed niveau number then name
+                              const px = parseLevel(x.niveau?.nom || x.classe?.niveau?.nom);
+                              const py = parseLevel(y.niveau?.nom || y.classe?.niveau?.nom);
+                              if (px !== py) return px - py;
+                              return (x.nom || '').localeCompare(y.nom || '');
+                            })
+                            .map(m => (
+                              <div key={m.id} className="p-3 border border-gray-200 rounded hover:shadow-sm flex items-start justify-between">
+                                <div>
+                                  <div className="font-medium">{m.nom}</div>
+                                  <div className="text-xs text-gray-500">{m.code} — Classe: {m.classe?.nom || '—'}</div>
+                                </div>
+                                <div className="flex gap-2">
+                                  <button onClick={() => handleOpenEditMatiere(m)} className="p-2 text-blue-600 hover:bg-blue-50 rounded" title="Modifier"><Edit size={16} /></button>
+                                  <button onClick={() => handleDeleteMatiere(m.id)} className="p-2 text-red-600 hover:bg-red-50 rounded" title="Supprimer"><Trash2 size={16} /></button>
+                                </div>
+                              </div>
+                            ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            });
+          })()}
+        </div>
+      )}
+    </div>
+  );
+
+  // Rendu de la page Salles
+  const renderSalles = () => (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-2xl font-bold text-gray-800">Gestion des Salles</h3>
+        <div className="flex items-center gap-3">
+          <button onClick={() => handleOpenAddSalle()} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+            <Plus size={18} />
+            Ajouter salle
+          </button>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center py-12">
+          <Loader className="animate-spin text-blue-600" size={40} />
+        </div>
+      ) : sallesData.length === 0 ? (
+        <div className="text-center py-12 text-gray-500">
+          <Building2 size={40} className="mx-auto mb-4 text-gray-300" />
+          <p>Aucune salle trouvée</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {sallesData.map((s) => (
+            <div key={s.id} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h4 className="text-xl font-bold text-gray-800 mb-1">{s.nom}</h4>
+                  <p className="text-sm text-gray-600">Code: {s.code}</p>
+                  <p className="text-sm text-gray-500">Capacité: {s.capacite || '—'}</p>
+                  <p className="text-sm text-gray-500">Département: {s.departement?.nom || '—'}</p>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => handleOpenEditSalle(s)} className="p-2 text-blue-600 hover:bg-blue-50 rounded" title="Modifier"><Edit size={18} /></button>
+                  <button onClick={() => handleDeleteSalle(s.id)} className="p-2 text-red-600 hover:bg-red-50 rounded" title="Supprimer"><Trash2 size={18} /></button>
                 </div>
               </div>
             </div>
@@ -1220,13 +1869,13 @@ ${classesData.map(c => `- ${c.nom}`).join('\n')}
       value: studentsData.filter(s => {
         const classe = classesData.find(c => {
           const classeId = typeof s.classe === 'object' ? s.classe?.id : s.classe;
-          return c.id == classeId;
+          return String(c.id) === String(classeId);
         });
         if (!classe) return false;
         const specialite = classe.specialite;
         if (!specialite) return false;
         const deptId = typeof specialite.departement === 'object' ? specialite.departement?.id : specialite.departement;
-        return deptId == dept.id;
+        return String(deptId) === String(dept.id);
       }).length
     })).filter(item => item.value > 0);
 
@@ -1237,7 +1886,7 @@ ${classesData.map(c => `- ${c.nom}`).join('\n')}
         const specialite = c.specialite;
         if (!specialite) return false;
         const deptId = typeof specialite.departement === 'object' ? specialite.departement?.id : specialite.departement;
-        return deptId == dept.id;
+        return String(deptId) === String(dept.id);
       }).length
     })).filter(item => item.value > 0);
 
@@ -1924,6 +2573,8 @@ ${classesData.map(c => `- ${c.nom}`).join('\n')}
       case 'teachers': return renderTeachers();
       case 'departments': return renderDepartments();
       case 'subjects': return renderSubjects();
+      case 'matieres': return renderMatieres();
+      case 'salles': return renderSalles();
       case 'reports': return renderReports();
       case 'messages': return renderMessages();
       case 'notifications': return renderNotifications();
@@ -2132,6 +2783,45 @@ ${classesData.map(c => `- ${c.nom}`).join('\n')}
           loadDashboardStats();
         }}
         classe={selectedClasse}
+      />
+      {/* Salles */}
+      <AddSalleModal
+        isOpen={showAddSalleModal}
+        onClose={handleCloseAddSalle}
+        onSaved={handleSavedSalle}
+        departments={departmentsData}
+      />
+
+      <EditSalleModal
+        isOpen={showEditSalleModal}
+        onClose={handleCloseEditSalle}
+        onSaved={handleSavedSalle}
+        initial={selectedSalle}
+        departments={departmentsData}
+      />
+
+      {/* Matières */}
+      <AddMatiereModal
+        isOpen={showAddMatiereModal}
+        onClose={handleCloseAddMatiere}
+        onSaved={handleSavedMatiere}
+        departments={departmentsData}
+        specialites={[]}
+        niveaux={[]}
+        classes={classesData}
+        teachers={teachersData}
+      />
+
+      <EditMatiereModal
+        isOpen={showEditMatiereModal}
+        onClose={handleCloseEditMatiere}
+        onSaved={handleSavedMatiere}
+        initial={selectedMatiere}
+        departments={departmentsData}
+        specialites={[]}
+        niveaux={[]}
+        classes={classesData}
+        teachers={teachersData}
       />
     </div>
   );

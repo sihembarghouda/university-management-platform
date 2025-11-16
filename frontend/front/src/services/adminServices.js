@@ -339,3 +339,91 @@ export const statsService = {
     }
   }
 };
+
+// ==================== SALLES ====================
+export const salleService = {
+  getAll: async () => {
+    try {
+      const response = await adminApi.get('/salles');
+      return response.data;
+    } catch (error) {
+      console.error('Erreur salleService.getAll:', error);
+      throw error;
+    }
+  }
+};
+
+// ==================== MATIÈRES ====================
+export const matiereService = {
+  getAll: async () => {
+    try {
+      const response = await adminApi.get('/matiere');
+      return response.data;
+    } catch (error) {
+      console.error('Erreur matiereService.getAll:', error);
+      throw error;
+    }
+  }
+};
+
+// CRUD pour SALLE
+salleService.create = async (data) => {
+  try {
+    const resp = await adminApi.post('/salles', data);
+    return { success: true, data: resp.data };
+  } catch (error) {
+    console.error('Erreur salleService.create:', error);
+    return { success: false, message: error.response?.data?.message || error.message };
+  }
+};
+
+salleService.update = async (id, data) => {
+  try {
+    const resp = await adminApi.patch(`/salles/${id}`, data);
+    return { success: true, data: resp.data };
+  } catch (error) {
+    console.error('Erreur salleService.update:', error);
+    return { success: false, message: error.response?.data?.message || error.message };
+  }
+};
+
+salleService.delete = async (id) => {
+  try {
+    await adminApi.delete(`/salles/${id}`);
+    return { success: true };
+  } catch (error) {
+    console.error('Erreur salleService.delete:', error);
+    return { success: false, message: error.response?.data?.message || error.message };
+  }
+};
+
+// CRUD pour MATIERE
+matiereService.create = async (data) => {
+  try {
+    const resp = await adminApi.post('/matiere', data);
+    return { success: true, data: resp.data };
+  } catch (error) {
+    console.error('Erreur matiereService.create:', error);
+    return { success: false, message: error.response?.data?.message || error.message };
+  }
+};
+
+matiereService.update = async (id, data) => {
+  try {
+    const resp = await adminApi.patch(`/matiere/${id}`, data);
+    return { success: true, data: resp.data };
+  } catch (error) {
+    console.error('Erreur matiereService.update:', error);
+    return { success: false, message: error.response?.data?.message || error.message };
+  }
+};
+
+matiereService.delete = async (id) => {
+  try {
+    await adminApi.delete(`/matiere/${id}`);
+    return { success: true };
+  } catch (error) {
+    console.error('Erreur matiereService.delete:', error);
+    return { success: false, message: error.response?.data?.message || error.message };
+  }
+};
