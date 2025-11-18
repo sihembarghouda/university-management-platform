@@ -1,0 +1,527 @@
+import { BadRequestException, ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import * as bcrypt from 'bcryptjs';
+import { JwtService } from '@nestjs/jwt';
+import { Utilisateur } from 'src/utilisateur/utilisateur.entity/utilisateur.entity';
+import { randomBytes } from 'crypto';
+import { MailerService } from '@nestjs-modules/mailer';
+import { generateEmailVerificationLink, generatePasswordResetLink, ensureFirebaseUser, updateFirebasePassword } from 'src/firebase/firebase.service';
+import * as fs from 'fs';
+import * as path from 'path';
+
+
+const BCRYPT_ROUNDS = Number(process.env.BCRYPT_ROUNDS || 12);
+
+@Injectable()
+export class AuthService {
+  constructor(
+    @InjectRepository(Utilisateur) private readonly usersRepo: Repository<Utilisateur>,
+    private readonly jwt: JwtService,
+    private readonly mailerService: MailerService
+  ) {}
+
+  private async hash(s: string) {
+    return bcrypt.hash(s, BCRYPT_ROUNDS);
+  }
+  private async compare(s: string, h: string) {
+    return bcrypt.compare(s, h);
+  }
+
+  async login(email: string, password: string) {
+    console.log('🔑 [Login] Attempt for email:', email);
+    
+    const user = await this.usersRepo.findOne({ where: { email } });
+    if (!user) {
+      console.log('❌ [Login] User not found');
+      throw new UnauthorizedException('Identifiants invalides');
+    }
+
+    console.log('✅ [Login] User found:', user.email);
+    console.log('🔐 [Login] Stored hash:', user.mdp_hash.substring(0, 20) + '...');
+
+    if (!user.emailConfirmed) {
+      console.log('❌ [Login] Email not confirmed');
+      throw new ForbiddenException('Email non confirmé');
+    }
+
+    console.log('🔐 [Login] Comparing password...');
+    const ok = await this.compare(password, user.mdp_hash);
+    console.log('🔐 [Login] Password match:', ok);
+    
+    if (!ok) {
+      console.log('❌ [Login] Password mismatch');
+      throw new UnauthorizedException('Identifiants invalides');
+    }
+
+    if (user.doit_changer_mdp) {
+      console.log('⚠️ [Login] Password change required');
+      throw new ForbiddenException('Changement de mot de passe requis');
+    }
+
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+      nom: user.nom,
+      prenom: user.prenom,
+    };
+    const access_token = await this.jwt.signAsync(payload);
+
+    console.log('✅ [Login] Success!');
+    return {
+      success: true,
+      message: 'Connexion réussie',
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        nom: user.nom,
+        prenom: user.prenom,
+      },
+      token: access_token,
+    };
+  }
+
+  async changePassword(email: string, currentPassword: string, newPassword: string) {
+    const user = await this.usersRepo.findOne({ where: { email } });
+    if (!user) throw new UnauthorizedException('Utilisateur introuvable');
+
+    const ok = await this.compare(currentPassword, user.mdp_hash);
+    if (!ok) throw new UnauthorizedException('Mot de passe actuel incorrect');
+
+    user.mdp_hash = await this.hash(newPassword);
+    user.doit_changer_mdp = false;
+
+    await this.usersRepo.save(user);
+
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+      nom: user.nom,
+      prenom: user.prenom,
+    };
+    const access_token = await this.jwt.signAsync(payload);
+
+    return {
+      success: true,
+      message: 'Mot de passe mis à jour',
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        nom: user.nom,
+        prenom: user.prenom,
+      },
+      token: access_token,
+    };
+  }
+
+  // Utilitaire pour import initial: mdp = hash(CIN) + forcer changement
+  async setInitialPasswordFromCIN(userId: number, cin: string) {
+    const mdpHash = await this.hash(cin);
+    await this.usersRepo.update(userId, { mdp_hash: mdpHash, doit_changer_mdp: true });
+  }
+  
+  async confirmEmail(email: string, token: string) {
+    const user = await this.usersRepo.findOne({ where: { email, confirmationToken: token } });
+    if (!user) throw new BadRequestException('Token invalide ou email incorrect');
+
+    user.emailConfirmed = true;
+    user.confirmationToken = null;
+    console.log('Updating user:', user);
+    await this.usersRepo.save(user);
+
+    return { message: 'Email confirmé avec succès' };
+  }
+
+
+  async resendConfirmation(email: string) {
+    const user = await this.usersRepo.findOne({ where: { email } });
+    if (!user) throw new BadRequestException('Utilisateur introuvable');
+
+    if (user.emailConfirmed) {
+      throw new BadRequestException('Email déjà confirmé');
+    }
+
+    const token = randomBytes(32).toString('hex');
+    user.confirmationToken = token;
+    await this.usersRepo.save(user);
+    // Ensure user exists in Firebase Auth and generate verification link
+    // await ensureFirebaseUser(email, user.cin ?? 'TempPass123!');
+    const continueUrl = `${process.env.FRONTEND_URL ?? 'http://localhost:3000'}/auth/confirm-email?email=${encodeURIComponent(email)}&token=${token}`;
+    const link = continueUrl; // await generateEmailVerificationLink(email, continueUrl);
+
+    await this.mailerService.sendMail({
+      to: email,
+      subject: 'Confirmation de votre email',
+      text: `Cliquez ici pour confirmer votre email : ${link}`,
+      html: `<p>Bonjour ${user.prenom || user.email},</p><p>Cliquez sur le lien suivant pour confirmer votre email:</p><p><a href="${link}">Confirmer mon email</a></p>`,
+    });
+
+    // TODO: Send email with confirmation link
+    // Example: http://localhost:3000/auth/confirm-email?email=...&token=...
+
+    return { message: 'Lien de confirmation renvoyé' };
+  }
+   
+  async forgotPassword(email: string) {
+    console.log('🔍 [ForgotPassword] Started for email:', email);
+    
+    const user = await this.usersRepo.findOne({ where: { email } });
+    if (!user) {
+      console.log('⚠️ [ForgotPassword] User not found for email:', email);
+      // Don't reveal if user exists for security
+      return { message: 'Si cet email existe, un lien de réinitialisation a été envoyé' };
+    }
+
+    console.log('✅ [ForgotPassword] User found:', user.email);
+
+    try {
+      // Ensure user exists in Firebase
+      await ensureFirebaseUser(email, user.cin ?? 'TempPass123!');
+      console.log('✅ [ForgotPassword] Firebase user ensured');
+
+      // Generate Firebase password reset link
+      const continueUrl = `${process.env.FRONTEND_URL ?? 'http://localhost:3003'}/reset-password`;
+      const firebaseResetLink = await generatePasswordResetLink(email, continueUrl);
+      console.log('🔗 [ForgotPassword] Firebase Reset Link generated:', firebaseResetLink);
+      
+      console.log('✅ [ForgotPassword] Firebase will send the password reset email automatically');
+      console.log('� [ForgotPassword] User will receive email from Firebase at:', email);
+        html: `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <style>
+              @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+              
+              * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+              }
+              
+              body {
+                font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+                background-color: #f4f7fc;
+                padding: 20px;
+              }
+              
+              .email-container {
+                max-width: 600px;
+                margin: 0 auto;
+                background-color: #ffffff;
+                border-radius: 16px;
+                overflow: hidden;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+              }
+              
+              .header {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                padding: 40px 30px;
+                text-align: center;
+              }
+              
+              .logo-container {
+                width: 120px;
+                height: 120px;
+                background-color: rgba(255, 255, 255, 0.95);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0 auto 20px;
+                padding: 10px;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+              }
+              
+              .logo-container img {
+                max-width: 100%;
+                max-height: 100%;
+                border-radius: 50%;
+                object-fit: contain;
+              }
+              
+              .header-icon {
+                width: 80px;
+                height: 80px;
+                background-color: rgba(255, 255, 255, 0.2);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0 auto 20px;
+                font-size: 40px;
+              }
+              
+              .header h1 {
+                color: #ffffff;
+                font-size: 28px;
+                font-weight: 700;
+                margin: 0;
+                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+              }
+              
+              .content {
+                padding: 40px 30px;
+              }
+              
+              .greeting {
+                font-size: 18px;
+                color: #2d3748;
+                margin-bottom: 20px;
+                font-weight: 600;
+              }
+              
+              .message {
+                font-size: 16px;
+                line-height: 1.6;
+                color: #4a5568;
+                margin-bottom: 30px;
+              }
+              
+              .button-container {
+                text-align: center;
+                margin: 40px 0;
+              }
+              
+              .reset-button {
+                display: inline-block;
+                padding: 16px 40px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: #ffffff !important;
+                text-decoration: none;
+                border-radius: 12px;
+                font-weight: 600;
+                font-size: 16px;
+                box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+                transition: all 0.3s ease;
+                position: relative;
+                overflow: hidden;
+              }
+              
+              .reset-button:before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: -100%;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+                transition: left 0.5s;
+              }
+              
+              .reset-button:hover:before {
+                left: 100%;
+              }
+              
+              .reset-button:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 25px rgba(102, 126, 234, 0.5);
+              }
+              
+              .info-box {
+                background-color: #f7fafc;
+                border-left: 4px solid #667eea;
+                padding: 16px;
+                border-radius: 8px;
+                margin: 30px 0;
+              }
+              
+              .info-box p {
+                font-size: 14px;
+                color: #4a5568;
+                margin: 0;
+                line-height: 1.5;
+              }
+              
+              .link-box {
+                background-color: #f7fafc;
+                padding: 16px;
+                border-radius: 8px;
+                margin: 20px 0;
+                border: 1px dashed #cbd5e0;
+              }
+              
+              .link-box p {
+                font-size: 13px;
+                color: #718096;
+                margin-bottom: 8px;
+              }
+              
+              .link-text {
+                font-size: 12px;
+                color: #667eea;
+                word-break: break-all;
+                font-family: 'Courier New', monospace;
+              }
+              
+              .footer {
+                background-color: #f7fafc;
+                padding: 30px;
+                text-align: center;
+                border-top: 1px solid #e2e8f0;
+              }
+              
+              .footer p {
+                font-size: 14px;
+                color: #718096;
+                margin: 5px 0;
+              }
+              
+              .divider {
+                height: 1px;
+                background: linear-gradient(to right, transparent, #e2e8f0, transparent);
+                margin: 30px 0;
+              }
+              
+              .warning {
+                background-color: #fff5f5;
+                border-left: 4px solid #fc8181;
+                padding: 16px;
+                border-radius: 8px;
+                margin: 20px 0;
+              }
+              
+              .warning p {
+                font-size: 14px;
+                color: #c53030;
+                margin: 0;
+              }
+              
+              @media only screen and (max-width: 600px) {
+                .email-container {
+                  border-radius: 0;
+                }
+                
+                .header, .content, .footer {
+                  padding: 30px 20px;
+                }
+                
+                .reset-button {
+                  padding: 14px 30px;
+                  font-size: 15px;
+                }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="email-container">
+              <div class="header">
+                ${logoBase64 ? `
+                <div class="logo-container">
+                  <img src="${logoBase64}" alt="Logo ISETT" />
+                </div>
+                ` : `
+                <div class="header-icon">🔐</div>
+                `}
+                <h1>Réinitialisation de mot de passe</h1>
+              </div>
+              
+              <div class="content">
+                <p class="greeting">Bonjour,</p>
+                
+                <p class="message">
+                  Nous avons reçu une demande de réinitialisation de mot de passe pour votre compte sur la plateforme de gestion universitaire <strong>ISETT</strong>.
+                </p>
+                
+                <p class="message">
+                  Pour créer un nouveau mot de passe sécurisé, cliquez sur le bouton ci-dessous :
+                </p>
+                
+                <div class="button-container">
+                  <a href="${resetUrl}" class="reset-button">
+                    🔓 Réinitialiser mon mot de passe
+                  </a>
+                </div>
+                
+                <div class="info-box">
+                  <p>
+                    <strong>⏱️ Validité du lien :</strong> Ce lien est valable pendant <strong>1 heure</strong> à compter de maintenant.
+                  </p>
+                </div>
+                
+                <div class="divider"></div>
+                
+                <div class="link-box">
+                  <p><strong>Le bouton ne fonctionne pas ?</strong> Copiez et collez ce lien dans votre navigateur :</p>
+                  <div class="link-text">${resetUrl}</div>
+                </div>
+                
+                <div class="warning">
+                  <p>
+                    ⚠️ <strong>Vous n'avez pas demandé cette réinitialisation ?</strong><br>
+                    Si vous n'êtes pas à l'origine de cette demande, ignorez simplement cet email. Votre mot de passe actuel reste inchangé et sécurisé.
+                  </p>
+                </div>
+              </div>
+              
+              <div class="footer">
+                <p><strong>Équipe ISETT - Institut Supérieur des Études Technologiques</strong></p>
+                <p style="font-size: 12px; color: #a0aec0; margin-top: 15px;">
+                  © ${new Date().getFullYear()} ISETT. Tous droits réservés.<br>
+                  Cet email a été envoyé automatiquement, merci de ne pas y répondre.
+                </p>
+              </div>
+            </div>
+          </body>
+          </html>
+        `,
+      });
+
+      console.log('✅ [ForgotPassword] Email sent successfully!');
+    } catch (error) {
+      console.error('❌ [ForgotPassword] Error:', error);
+      throw error;
+    }
+
+    return { message: 'Si cet email existe, un lien de réinitialisation a été envoyé' };
+  }
+
+  async resetPassword(email: string, token: string, newPassword: string) {
+    console.log('🔐 [ResetPassword] Started for email:', email);
+    console.log('🔐 [ResetPassword] Token:', token);
+    
+    const user = await this.usersRepo.findOne({ where: { email, resetToken: token } });
+    
+    if (!user) {
+      console.log('❌ [ResetPassword] User not found or token mismatch');
+      throw new BadRequestException('Token invalide ou expiré');
+    }
+
+    console.log('✅ [ResetPassword] User found:', user.email);
+    console.log('🔐 [ResetPassword] Token expires:', user.resetTokenExpires);
+
+    if (!user.resetTokenExpires || user.resetTokenExpires < new Date()) {
+      console.log('❌ [ResetPassword] Token expired');
+      throw new BadRequestException('Le token a expiré');
+    }
+
+    console.log('🔐 [ResetPassword] Hashing new password...');
+    const newHash = await this.hash(newPassword);
+    console.log('🔐 [ResetPassword] New hash generated:', newHash.substring(0, 20) + '...');
+    
+    user.mdp_hash = newHash;
+    user.resetToken = null as any;
+    user.resetTokenExpires = null as any;
+    user.doit_changer_mdp = false;
+    
+    await this.usersRepo.save(user);
+    console.log('✅ [ResetPassword] Password saved to database');
+
+    // Update password in Firebase as well
+    // try {
+    //   await updateFirebasePassword(email, newPassword);
+    //   console.log('✅ [ResetPassword] Firebase password updated');
+    // } catch (err) {
+    //   // Log and continue; DB password is authoritative
+    //   console.warn('⚠️ [ResetPassword] Failed to update firebase password', err);
+    // }
+
+    return { message: 'Mot de passe réinitialisé avec succès' };
+  }
+}

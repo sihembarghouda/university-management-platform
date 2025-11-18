@@ -1,0 +1,125 @@
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import './LoginPage.css';
+
+const LoginPage = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const { login, user } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      const result = await login(email, password);
+
+      if (result.success) {
+        // Redirect to role-specific dashboard based on type returned by backend
+        const userType = result.type || result.user?.role || user?.role;
+        switch (userType) {
+          case 'etudiant':
+            navigate('/student-dashboard');
+            break;
+          case 'enseignant':
+            navigate('/teacher-dashboard');
+            break;
+          case 'directeur_departement':
+            navigate('/director-dashboard');
+            break;
+          case 'admin':
+          case 'administratif':
+            navigate('/admin-dashboard');
+            break;
+          default:
+            navigate('/dashboard'); // fallback
+        }
+      } else if (result.mustChangePassword || result.message === 'Changement de mot de passe requis') {
+        navigate('/change-password', { state: { email } });
+      } else {
+        setError(result.message);
+      }
+    } catch (error) {
+      setError('Erreur de connexion');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = () => {
+    navigate('/forgot-password');
+  };
+
+  return (
+    <div className="login-page">
+      <div className="login-container">
+        <div className="login-header">
+          <Link to="/" className="back-link">
+            ← Retour à l'accueil
+          </Link>
+          <div className="logo">🔐</div>
+          <h2>Connexion</h2>
+          <p>Accédez à votre espace personnel</p>
+        </div>
+
+        {error && (
+          <div className="error-message">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="login-form">
+          <div className="form-group">
+            <label htmlFor="email">Email</label>
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              placeholder="votre.email@univ.tn"
+              disabled={loading}
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="password">Mot de passe</label>
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              placeholder="Votre mot de passe"
+              disabled={loading}
+            />
+          </div>
+
+          <div className="button-container">
+            <button type="submit" className="btn btn-primary btn-centered" disabled={loading}>
+              {loading ? 'Connexion...' : 'Se connecter'}
+            </button>
+          </div>
+        </form>
+
+        <div className="forgot-password-section">
+          <button 
+            type="button" 
+            className="forgot-password-link"
+            onClick={handleForgotPassword}
+            disabled={loading}
+          >
+            Mot de passe oublié ?
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default LoginPage;

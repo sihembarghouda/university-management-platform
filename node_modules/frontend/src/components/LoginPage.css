@@ -1,0 +1,453 @@
+/* Variables de couleurs RÉSEAU */
+:root {
+  --primary-blue: #1e5ba8;
+  --secondary-turquoise: #5eb3b7;
+  --accent-yellow: #ffc107;
+  --white: #ffffff;
+  --light-gray: #f5f7fa;
+  --text-dark: #2c3e50;
+  --text-light: #6c757d;
+  --error-red: #dc3545;
+  --error-bg: #fff5f5;
+  --success-green: #10b981;
+  --success-bg: #f0fdf4;
+  --shadow: rgba(30, 91, 168, 0.1);
+  --shadow-hover: rgba(30, 91, 168, 0.2);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Page principale - FOND BLANC */
+.login-page {
+  min-height: 100vh;
+  background: var(--white);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Container de connexion */
+.login-container {
+  background: var(--white);
+  padding: 3rem;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 500px;
+  width: 100%;
+  position: center;
+  z-index: 1;
+  justify-self: end;
+  margin-right: 5%;
+  animation: slideInRight 0.6s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Lien retour */
+.back-link {
+  position: absolute;
+  top: 1.5rem;
+  left: 1.5rem;
+  color: var(--secondary-turquoise);
+  text-decoration: none;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+}
+
+.back-link:hover {
+  color: var(--primary-blue);
+  background: var(--light-gray);
+  transform: translateX(-5px);
+}
+
+.back-link svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Header */
+.login-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  margin-top: 2rem;
+}
+
+.logo-wrapper {
+  margin-bottom: 1.5rem;
+}
+
+.logo-box {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-turquoise) 100%);
+  color: var(--white);
+  padding: 1rem 2.5rem;
+  border-radius: 12px;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 3px;
+  box-shadow: 0 8px 20px var(--shadow);
+}
+
+.login-header h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 0.5rem;
+}
+
+.login-header p {
+  color: var(--text-light);
+  font-size: 1rem;
+}
+
+/* Messages */
+.error-message {
+  background: var(--error-bg);
+  color: var(--error-red);
+  padding: 1rem 1.25rem;
+  border-radius: 10px;
+  margin-bottom: 1.5rem;
+  border-left: 4px solid var(--error-red);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 500;
+  animation: shake 0.5s ease;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-10px); }
+  75% { transform: translateX(10px); }
+}
+
+.error-message svg {
+  min-width: 20px;
+  min-height: 20px;
+}
+
+.success-message {
+  background: var(--success-bg);
+  color: var(--success-green);
+  padding: 2rem;
+  border-radius: 10px;
+  text-align: center;
+  border-left: 4px solid var(--success-green);
+  animation: fadeIn 0.5s ease;
+}
+
+.success-message svg {
+  margin-bottom: 1rem;
+}
+
+.success-message p {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+}
+
+.success-message small {
+  color: #059669;
+  font-size: 0.9rem;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Formulaire */
+.login-form {
+  margin-bottom: 1.5rem;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  font-size: 0.95rem;
+}
+
+.form-group label svg {
+  color: var(--secondary-turquoise);
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border: 2px solid #e0e6ed;
+  border-radius: 10px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  background: var(--white);
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--secondary-turquoise);
+  box-shadow: 0 0 0 4px rgba(94, 179, 183, 0.1);
+}
+
+.form-group input:disabled {
+  background-color: var(--light-gray);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.form-group input::placeholder {
+  color: #b0b8c1;
+}
+
+/* Boutons */
+.btn {
+  width: 100%;
+  padding: 0.875rem 1.5rem;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: inherit;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-turquoise) 100%);
+  color: var(--white);
+  box-shadow: 0 4px 12px var(--shadow);
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px var(--shadow-hover);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-secondary {
+  background: var(--light-gray);
+  color: var(--text-dark);
+  border: 2px solid #e0e6ed;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #e0e6ed;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* Spinner de chargement */
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid var(--white);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Section mot de passe oublié */
+.forgot-password-section {
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.forgot-password-link {
+  background: none;
+  border: none;
+  color: var(--secondary-turquoise);
+  font-size: 0.9rem;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  padding: 0.5rem;
+}
+
+.forgot-password-link:hover:not(:disabled) {
+  color: var(--primary-blue);
+  text-decoration: underline;
+}
+
+/* Formulaire de réinitialisation */
+.reset-password-form {
+  animation: fadeIn 0.3s ease;
+}
+
+.reset-password-form h3 {
+  color: var(--primary-blue);
+  font-size: 1.5rem;
+  margin-bottom: 0.75rem;
+  text-align: center;
+}
+
+.reset-description {
+  color: var(--text-light);
+  font-size: 0.9rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.button-group {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.button-group .btn {
+  flex: 1;
+}
+
+/* Liens d'authentification */
+.auth-links {
+  text-align: center;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e0e6ed;
+}
+
+.auth-links p {
+  color: var(--text-light);
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.auth-links a {
+  color: var(--secondary-turquoise);
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.auth-links a:hover {
+  color: var(--primary-blue);
+  text-decoration: underline;
+}
+
+/* Illustration côté gauche - Supprimée pour fond blanc */
+.login-illustration {
+  display: none;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .login-page {
+    grid-template-columns: 1fr;
+    padding: 1.5rem;
+  }
+
+  .login-container {
+    justify-self: center;
+    margin: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .login-page {
+    padding: 1rem;
+  }
+
+  .login-container {
+    padding: 2rem 1.5rem;
+    max-width: 100%;
+  }
+
+  .back-link {
+    top: 1rem;
+    left: 1rem;
+    font-size: 0.9rem;
+  }
+
+  .logo-box {
+    padding: 0.75rem 2rem;
+    font-size: 1.5rem;
+  }
+
+  .login-header h2 {
+    font-size: 1.75rem;
+  }
+
+  .button-group {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-container {
+    padding: 1.5rem 1rem;
+  }
+
+  .login-header {
+    margin-top: 2.5rem;
+  }
+
+  .logo-box {
+    padding: 0.6rem 1.5rem;
+    font-size: 1.25rem;
+    letter-spacing: 2px;
+  }
+
+  .form-group input {
+    padding: 0.75rem;
+    font-size: 0.95rem;
+  }
+
+  .btn {
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+  }
+}
+
+/* Animations d'entrée personnalisées */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
