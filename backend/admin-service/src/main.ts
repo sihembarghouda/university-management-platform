@@ -11,10 +11,10 @@ async function bootstrap() {
   const isProd = process.env.NODE_ENV === 'production';
   const allowedOrigins = process.env.FRONTEND_URLS
     ? process.env.FRONTEND_URLS.split(',').map((u) => u.trim())
-    : undefined;
+    : ['http://localhost:3000', 'http://localhost:3003', 'http://localhost:3004'];
 
   app.enableCors({
-    origin: isProd ? allowedOrigins || [] : true,
+    origin: isProd ? allowedOrigins || [] : allowedOrigins,
     credentials: true,
   });
 
@@ -28,7 +28,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document); // 👉 Swagger sera sur /api
 
-  const port = Number(process.env.PORT) || 3000;
+  const port = Number(process.env.PORT) || 3002;
   await app.listen(port);
   console.log(`🚀 Application running on: http://localhost:${port}`);
   console.log(`📘 Swagger UI: http://localhost:${port}/api`);
