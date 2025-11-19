@@ -6,19 +6,25 @@ export const BarChart = ({ data, title, height = 300 }) => {
 
   const maxValue = Math.max(...data.map(item => item.value));
   const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
+  // reserve some top padding for value labels so they don't overlap the chart title
+  const topPadding = 36; // px reserved above the bars for numeric labels (increased to allow higher placement)
+  const labelArea = 40; // px reserved below bars for labels
+  const usableHeight = Math.max(0, height - topPadding - labelArea);
 
   return (
     <div className="w-full">
       {title && <h4 className="text-lg font-bold text-gray-800 mb-4">{title}</h4>}
-      <div className="flex items-end justify-between gap-2" style={{ height: `${height}px` }}>
+      <div className="flex items-end justify-between gap-2" style={{ height: `${height}px`, paddingTop: `${topPadding}px` }}>
         {data.map((item, index) => {
-          const barHeight = maxValue > 0 ? (item.value / maxValue) * (height - 60) : 0;
+          const barHeight = maxValue > 0 ? (item.value / maxValue) * usableHeight : 0;
           const color = colors[index % colors.length];
           
           return (
             <div key={index} className="flex-1 flex flex-col items-center justify-end gap-2">
-              <div className="text-center mb-1">
-                <span className="text-sm font-bold text-gray-700">{item.value}</span>
+              <div className="relative w-full flex justify-center">
+                <div className="absolute -top-6 text-sm font-bold text-gray-700 bg-white px-1">
+                  {item.value}
+                </div>
               </div>
               <div
                 className="w-full rounded-t-lg transition-all duration-500 hover:opacity-80 cursor-pointer relative group"
@@ -29,12 +35,12 @@ export const BarChart = ({ data, title, height = 300 }) => {
                 }}
                 title={`${item.label}: ${item.value}`}
               >
-                <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-2 py-1 rounded text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-2 py-1 rounded text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
                   {item.label}: {item.value}
                 </div>
               </div>
               <div className="text-xs text-gray-600 text-center mt-2 break-words w-full px-1">
-                {item.label}
+                <span className="block truncate max-w-[110px]">{item.label}</span>
               </div>
             </div>
           );
@@ -275,21 +281,23 @@ export const StatCard = ({ title, value, subtitle, icon: Icon, color = "blue", t
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <p className="text-sm text-gray-600 mb-2">{title}</p>
+      <div>
+        <p className="text-sm text-gray-600 mb-2 break-words">{title}</p>
+
+        <div className="flex items-center justify-between">
           <p className="text-3xl font-bold text-gray-800 mb-1">{value}</p>
-          {subtitle && <p className="text-xs text-gray-500">{subtitle}</p>}
-          {trend && (
-            <p className={`text-sm mt-2 ${trendColors[trend.direction]}`}>
-              {trend.direction === 'up' ? '↑' : trend.direction === 'down' ? '↓' : '→'} {trend.value}
-            </p>
+          {Icon && (
+            <div className={`p-3 rounded-lg ${colorClasses[color]} ml-4 flex-shrink-0`}>
+              <Icon size={24} />
+            </div>
           )}
         </div>
-        {Icon && (
-          <div className={`p-3 rounded-lg ${colorClasses[color]}`}>
-            <Icon size={24} />
-          </div>
+
+        {subtitle && <p className="text-xs text-gray-500 mt-2">{subtitle}</p>}
+        {trend && (
+          <p className={`text-sm mt-2 ${trendColors[trend.direction]}`}>
+            {trend.direction === 'up' ? '↑' : trend.direction === 'down' ? '↓' : '→'} {trend.value}
+          </p>
         )}
       </div>
     </div>

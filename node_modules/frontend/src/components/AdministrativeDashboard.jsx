@@ -933,7 +933,9 @@ const AdminDashboard = () => {
       { label: 'Étudiants', value: stats.students },
       { label: 'Enseignants', value: stats.teachers },
       { label: 'Départements', value: stats.departments },
-      { label: 'Classes', value: stats.classes }
+      { label: 'Classes', value: stats.classes },
+      { label: 'Salles', value: stats.salles },
+      { label: 'Matières', value: stats.matieres }
     ];
 
     // Étudiants par département
@@ -974,7 +976,7 @@ const AdminDashboard = () => {
 
     return (
       <>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
           <StatCard
             title="Étudiants"
             value={stats.students}
@@ -1003,6 +1005,20 @@ const AdminDashboard = () => {
             color="purple"
             subtitle="Classes ouvertes"
           />
+          <StatCard
+            title="Salles"
+            value={stats.salles}
+            icon={Building2}
+            color="blue"
+            subtitle="Salles disponibles"
+          />
+          <StatCard
+            title="Matières"
+            value={stats.matieres}
+            icon={FileText}
+            color="green"
+            subtitle="Matières enregistrées"
+          />
         </div>
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
@@ -1011,6 +1027,38 @@ const AdminDashboard = () => {
             title="Vue d'ensemble de l'établissement"
             height={300}
           />
+        </div>
+
+        {/* Salles / Matières breakdown charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-bold text-gray-800 mb-4">Salles par département</h3>
+            <BarChart data={
+              departmentsData.map(dept => ({
+                label: dept.nom,
+                value: sallesData.filter(s => {
+                  const depId = typeof s.departement === 'object' ? s.departement?.id : s.departement;
+                  return String(depId) === String(dept.id);
+                }).length
+              })).filter(i => i.value > 0)
+            } height={260} />
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-bold text-gray-800 mb-4">Matières par département</h3>
+            <PieChart data={
+              departmentsData.map(dept => ({
+                label: dept.nom,
+                value: matieresData.filter(m => {
+                  // Matière peut référencer specialite or departement
+                  const depIdFromSpecialite = typeof m.specialite === 'object' ? m.specialite?.departement?.id : m.specialite?.departement;
+                  const depIdDirect = typeof m.departement === 'object' ? m.departement?.id : m.departement;
+                  const depId = depIdFromSpecialite || depIdDirect;
+                  return String(depId) === String(dept.id);
+                }).length
+              })).filter(i => i.value > 0)
+            } size={220} />
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
