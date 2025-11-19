@@ -98,6 +98,40 @@ export class AdminService {
     }
   }
 
+  // Récupérer tous les étudiants (optionnellement filtrer par classeId)
+  async getEtudiants(classeId?: number) {
+    try {
+      const response = await firstValueFrom(
+        this.httpService.get(`${this.adminServiceUrl}/etudiants`)
+      );
+      const etudiants = response.data;
+      if (typeof classeId === 'number') {
+        return etudiants.filter((e: any) => Number(e.classe?.id) === Number(classeId) || Number(e.classeId) === Number(classeId));
+      }
+      return etudiants;
+    } catch (error) {
+      throw new HttpException(
+        'Erreur lors de la récupération des étudiants',
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  // Récupérer un étudiant par ID
+  async getEtudiant(id: number) {
+    try {
+      const response = await firstValueFrom(
+        this.httpService.get(`${this.adminServiceUrl}/etudiants/${id}`)
+      );
+      return response.data;
+    } catch (error) {
+      throw new HttpException(
+        `Étudiant avec ID ${id} introuvable`,
+        HttpStatus.NOT_FOUND
+      );
+    }
+  }
+
   // Récupérer une classe par ID
   async getClasse(id: number) {
     try {

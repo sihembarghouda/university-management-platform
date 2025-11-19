@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import axios from 'axios';
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import "./Dashboard.css";
@@ -18,75 +19,66 @@ const StudentDashboard = () => {
     departement: user?.departement || "",
   });
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     loadDashboardData();
-  }, []);
+  }, [user]);
 
   const loadDashboardData = async () => {
     try {
-      // Simulate API call for dashboard data
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      
-      const data = {
-        title: "Espace Étudiant",
-        stats: [
-          { 
-            label: "Mes cours", 
-            value: "6", 
-            color: "primary",
-            description: "Cours actifs"
-          },
-          
-          { 
-            label: "Absences", 
-            value: "2", 
-            color: "yellow",
-            description: "Jours d'absence"
-          },
-          { 
-            label: "Crédits validés", 
-            value: "45/180", 
-            color: "primary",
-            description: "Progression"
-          },
-        ],
-        actions: [
-          { 
-            label: "Mon emploi du temps", 
-            action: "viewSchedule",
-            description: "Consulter mon planning"
-          },
-          { 
-            label: "Mes notes", 
-            action: "viewGrades",
-            description: "Résultats et bulletins"
-          },
-          { 
-            label: "Statistiques", 
-            action: "statistics",
-            description: "Analyse de performance"
-          },
-          { 
-            label: "Messagerie", 
-            action: "messaging",
-            description: "Messages et notifications"
-          },
-          { 
-            label: "Bibliothèque", 
-            action: "library",
-            description: "Ressources pédagogiques"
-          },
-          { 
-            label: "Scolarité", 
-            action: "scolarite",
-            description: "Documents administratifs"
-          },
-        ],
-      };
-      setDashboardData(data);
+      // fetch today's schedule for the student (robust user id detection)
+      if (user && user.role === 'etudiant') {
+        const uid = user.id ?? user.sub ?? user.userId ?? user.etudiantId ?? user._id;
+        const emploiSvc = (await import('../services/emploiService')).default;
+
+        // Prefer fetching the full class schedule (semester) so emploi apparaît même s'il n'y a rien aujourd'hui
+        let emplois;
+        let classeId = user?.classeId ?? user?.classe?.id ?? null;
+        if (!classeId) {
+          // try to fetch enriched profile from auth service
+          try {
+            const me = (await axios.get('/auth/me')).data;
+            classeId = me?.classe?.id ?? me?.classeId ?? null;
+          } catch (err) {
+            // ignore — will fallback to student-specific endpoint
+          }
+        }
+
+        if (classeId) {
+          emplois = await emploiSvc.getScheduleForClasse(classeId, 1);
+        } else {
+          // fallback to today-by-student if class unknown
+          emplois = await emploiSvc.getTodayForEtudiant(uid);
+        }
+        const absences = await (await import('../services/absenceService')).default.getAbsencesByStudent(uid);
+
+        const nbEmplois = Object.values(emplois || {}).flat().length || 0;
+        const nbAbs = (absences || []).length || 0;
+
+        const data = {
+          title: 'Espace Étudiant',
+          stats: [
+            { label: "Mes cours aujourd'hui", value: nbEmplois, color: 'primary', description: "Séances prévues aujourd'hui" },
+            { label: 'Absences', value: nbAbs, color: 'yellow', description: 'Absences enregistrées' },
+            { label: 'Crédits validés', value: '45/180', color: 'primary', description: 'Progression' },
+          ],
+          emplois,
+          absences,
+          actions: [
+            { label: 'Mon emploi du temps', action: 'viewSchedule', description: 'Consulter mon planning' },
+            { label: 'Mes notes', action: 'viewGrades', description: 'Résultats et bulletins' },
+            { label: 'Statistiques', action: 'statistics', description: 'Analyse de performance' },
+            { label: 'Messagerie', action: 'messaging', description: 'Messages et notifications' },
+          ],
+        };
+        setDashboardData(data);
+      } else {
+        // fallback: keep simulated data
+        setDashboardData({ title: 'Espace Étudiant', stats: [] });
+      }
       setLoading(false);
     } catch (error) {
-      console.error("Erreur lors du chargement des données:", error);
+      console.error('Erreur lors du chargement des données:', error);
       setLoading(false);
     }
   };

@@ -32,4 +32,22 @@ export class EmploiDuTempsController {
   getScheduleForSalle(@Param('id') id: number, @Param('semestre') semestre: number) {
     return this.service.getScheduleForSalle(id, semestre);
   }
+
+  @Get('today/enseignant/:id')
+  @ApiResponse({ status: 200, description: "Séances d'aujourd'hui pour un enseignant" })
+  getTodayForEnseignant(@Param('id') id: number) {
+    return this.service.getTodayForEnseignant(Number(id));
+  }
+
+  @Get('today/etudiant/:id')
+  @ApiResponse({ status: 200, description: "Séances d'aujourd'hui pour un étudiant (par sa classe)" })
+  getTodayForEtudiant(@Param('id') id: number) {
+    return this.service.getTodayForEtudiant(Number(id));
+  }
+
+  @Get('session/:id')
+  @ApiResponse({ status: 200, description: 'Détails d une séance (avec liste des étudiants)' })
+  getSessionDetails(@Param('id') id: number) {
+    return this.service.getSessionDetails(Number(id));
+  }
 }

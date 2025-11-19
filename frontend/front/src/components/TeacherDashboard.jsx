@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import axios from 'axios';
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import "./Dashboard.css";
@@ -19,33 +20,53 @@ const TeacherDashboard = () => {
     specialite: user?.specialite || "",
   });
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     loadDashboardData();
-  }, []);
+  }, [user]);
 
   const loadDashboardData = async () => {
-    // Simulate API call for dashboard data
-    setTimeout(() => {
-      const data = {
-        title: "Espace Enseignant",
-        stats: [
-          { label: "Mes cours", value: "4", icon: "📚" },
-          { label: "Étudiants inscrits", value: "156", icon: "👥" },
-          { label: "Évaluations en attente", value: "12", icon: "📝" },
-          { label: "Taux de réussite", value: "87%", icon: "📊" },
-        ],
-        actions: [
-          { label: "Gérer mes cours", icon: "📚", action: "manageCourses" },
-          { label: "Évaluer étudiants", icon: "📝", action: "gradeStudents" },
-          { label: "Emploi du temps", icon: "📅", action: "viewSchedule" },
-          { label: "Statistiques", icon: "📊", action: "statistics" },
-          { label: "Messagerie", icon: "💬", action: "messaging" },
-          { label: "Ressources pédagogiques", icon: "📖", action: "resources" },
-        ],
-      };
-      setDashboardData(data);
+    try {
+      if (user && user.role === 'enseignant') {
+        const uid = user.id ?? user.sub ?? user.userId ?? user.enseignantId ?? user._id;
+        const emploiSvc = (await import('../services/emploiService')).default;
+
+        // Prefer fetching the full schedule for the semester so emploi always appears
+        let emplois;
+        let enseignantId = user?.enseignantId ?? user?.enseignant?.id ?? uid ?? null;
+        if (!enseignantId) {
+          try {
+            const me = (await axios.get('/auth/me')).data;
+            enseignantId = me?.enseignant?.id ?? me?.enseignantId ?? me?.id ?? null;
+          } catch (err) {
+            // ignore and fallback
+          }
+        }
+
+        if (enseignantId) {
+          emplois = await emploiSvc.getScheduleForEnseignant(enseignantId, 1);
+        } else {
+          emplois = await emploiSvc.getTodayForEnseignant(uid);
+        }
+        const data = {
+          title: 'Espace Enseignant',
+          stats: [
+            { label: "Mes cours aujourd'hui", value: Object.values(emplois || {}).flat().length || 0, icon: '📚' },
+            { label: 'Étudiants inscrits', value: '—', icon: '👥' },
+            { label: 'Évaluations en attente', value: '—', icon: '📝' },
+            { label: 'Taux de réussite', value: '—', icon: '📊' },
+          ],
+          emplois,
+        };
+        setDashboardData(data);
+      } else {
+        setDashboardData({ title: 'Espace Enseignant', stats: [] });
+      }
       setLoading(false);
-    }, 1000);
+    } catch (err) {
+      console.error('Erreur chargement emplois enseignant', err);
+      setLoading(false);
+    }
   };
 
   const handleAction = (action) => {
@@ -270,6 +291,25 @@ const TeacherDashboard = () => {
             </div>
           ))}
         </div>
+
+        {dashboardData?.emplois && (
+          <section className="section">
+            <h3>Séances d'aujourd'hui</h3>
+            {Object.keys(dashboardData.emplois).length === 0 && <p>Aucune séance aujourd'hui</p>}
+            {Object.entries(dashboardData.emplois).map(([jour, list]) => (
+              <div key={jour}>
+                <h4>{jour}</h4>
+                <ul>
+                  {list.map((s) => (
+                    <li key={s.heureDebut + s.heureFin + (s.matiere||'')}>
+                      {s.heureDebut} - {s.heureFin} • {s.matiere} • {s.classe} • <a href={`/session/${s.id}/attendance`}>Prendre l'appel</a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </section>
+        )}
 
         <div className="actions-section">
           <h2>Actions disponibles</h2>

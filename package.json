@@ -7,10 +7,11 @@
     "frontend/*"
   ],
   "scripts": {
-    "start:all": "concurrently \"npm --prefix backend/auth-service run start:dev\" \"npm --prefix backend/admin-service run start:dev\" \"npm --prefix backend/absence-service run start:dev\"",
+    "start:all": "concurrently \"npm --prefix backend/auth-service run start:dev\" \"npm --prefix backend/admin-service run start:dev\" \"npm --prefix backend/absence-service run start:dev\" \"npm --prefix backend/emploi-service run start:dev\"",
     "start:auth": "npm --prefix backend/auth-service run start:dev",
     "start:admin": "npm --prefix backend/admin-service run start:dev",
-    "start:absence": "npm --prefix backend/absence-service run start:dev"
+    "start:absence": "npm --prefix backend/absence-service run start:dev",
+    "start:emploi": "npm --prefix backend/emploi-service run start:dev"
   },
   "devDependencies": {
     "concurrently": "^8.2.0"
