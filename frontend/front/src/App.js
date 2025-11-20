@@ -12,7 +12,6 @@ import Dashboard from "./components/Dashboard";
 import StudentDashboard from "./components/StudentDashboard";
 import TeacherDashboard from "./components/TeacherDashboard";
 import DirectorDashboard from "./components/DirectorDashboard";
-import SessionAttendance from "./components/SessionAttendance";
 import AdministrativeDashboard from "./components/AdministrativeDashboard";
 import AdminPanel from "./components/AdminPanel";
 import ConfirmEmailPage from "./components/ConfirmEmailPage";
@@ -92,14 +91,6 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={["enseignant"]}>
                   <TeacherDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/session/:id/attendance"
-              element={
-                <ProtectedRoute allowedRoles={["enseignant"]}>
-                  <SessionAttendance />
                 </ProtectedRoute>
               }
             />

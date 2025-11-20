@@ -189,19 +189,4 @@ export class AbsenceService {
       avecRattrapage
     };
   }
-
-  async createBatch(batch: CreateAbsenceDto[]): Promise<Absence[]> {
-    const created: Absence[] = [];
-    for (const item of batch) {
-      const absence: any = this.absenceRepo.create(item as any);
-      try {
-        const saved = await this.absenceRepo.save(absence);
-        created.push(saved);
-      } catch (err) {
-        console.error('AbsenceService.createBatch error for item', item, err);
-        // continue creating others
-      }
-    }
-    return created;
-  }
 }

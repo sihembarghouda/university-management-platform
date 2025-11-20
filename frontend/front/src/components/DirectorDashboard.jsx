@@ -24,40 +24,29 @@ const DirectorDashboard = () => {
   }, []);
 
   const loadDashboardData = async () => {
-    try {
-      const [statsResp, absStats] = await Promise.all([
-        (await import('../services/adminServices')).statsService.getDirectorStats(),
-        (await import('../services/absenceService')).default.getStatistics()
-      ]);
-
-      const stats = statsResp.success ? statsResp.data : { totalEnseignants: '—', totalEtudiants: '—', totalClasses: '—', totalDepartements: '—' };
-      const abs = absStats || {};
-
+    // Simulate API call for dashboard data
+    setTimeout(() => {
       const data = {
-        title: 'Espace Directeur de Département',
+        title: "Espace Directeur de Département",
         stats: [
-          { label: 'Enseignants', value: stats.totalEnseignants || '—', icon: '👨‍🏫' },
-          { label: 'Étudiants', value: stats.totalEtudiants || '—', icon: '👥' },
-          { label: 'Cours actifs', value: stats.totalClasses || '—', icon: '📚' },
-          { label: 'Absences non justifiées', value: abs.nonJustifiees ?? '—', icon: '⚠️' },
+          { label: "Enseignants", value: "24", icon: "👨‍🏫" },
+          { label: "Étudiants", value: "450", icon: "👥" },
+          { label: "Cours actifs", value: "18", icon: "📚" },
+          { label: "Taux de réussite", value: "82%", icon: "📊" },
         ],
         actions: [
-          { label: 'Gérer utilisateurs', icon: '👥', action: 'manageUsers' },
-          { label: 'Gérer enseignants', icon: '👨‍🏫', action: 'manageTeachers' },
-          { label: 'Gérer étudiants', icon: '👥', action: 'manageStudents' },
-          { label: 'Planifier cours', icon: '📅', action: 'scheduleCourses' },
-          { label: 'Rapports', icon: '📊', action: 'reports' },
-          { label: 'Budget', icon: '💰', action: 'budget' },
-          { label: 'Évaluations', icon: '📝', action: 'evaluations' },
+          { label: "Gérer utilisateurs", icon: "👥", action: "manageUsers" },
+          { label: "Gérer enseignants", icon: "👨‍🏫", action: "manageTeachers" },
+          { label: "Gérer étudiants", icon: "👥", action: "manageStudents" },
+          { label: "Planifier cours", icon: "📅", action: "scheduleCourses" },
+          { label: "Rapports", icon: "📊", action: "reports" },
+          { label: "Budget", icon: "💰", action: "budget" },
+          { label: "Évaluations", icon: "📝", action: "evaluations" },
         ],
       };
       setDashboardData(data);
       setLoading(false);
-    } catch (err) {
-      console.error('Erreur chargement dashboard directeur', err);
-      setDashboardData({ title: 'Espace Directeur de Département', stats: [] });
-      setLoading(false);
-    }
+    }, 1000);
   };
 
   const handleAction = (action) => {

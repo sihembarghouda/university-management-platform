@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { EmploiDuTemps } from './entities/emploi-du-temps.entity';
@@ -76,57 +76,6 @@ export class EmploiDuTempsService {
     return this.groupByDay(emplois);
   }
 
-  async getTodayForEnseignant(enseignantId: number) {
-    await this.adminService.getEnseignant(enseignantId);
-    const today = new Date().toISOString().slice(0, 10);
-    const emplois = await this.emploiRepo.find({
-      where: { enseignantId, date: today },
-      order: { heureDebut: 'ASC' }
-    });
-    return this.groupByDay(emplois);
-  }
-
-  async getTodayForEtudiant(etudiantId: number) {
-    const etudiant = await this.adminService.getEtudiant(etudiantId);
-    const classeId = etudiant?.classe?.id || etudiant?.classeId;
-    if (!classeId) throw new NotFoundException('Classe de l\'étudiant introuvable');
-    const today = new Date().toISOString().slice(0, 10);
-    const emplois = await this.emploiRepo.find({
-      where: { classeId, date: today },
-      order: { heureDebut: 'ASC' }
-    });
-    return this.groupByDay(emplois);
-  }
-
-  async getSessionDetails(sessionId: number) {
-    const emploi = await this.emploiRepo.findOne({ where: { id: sessionId } });
-    if (!emploi) throw new NotFoundException(`Séance ${sessionId} introuvable`);
-
-    const matiere = await this.adminService.getMatiere(emploi.matiereId);
-    const enseignant = await this.adminService.getEnseignant(emploi.enseignantId);
-    const salle = await this.adminService.getSalle(emploi.salleId);
-    const classe = await this.adminService.getClasse(emploi.classeId);
-    // fetch students in the class (admin-service returns all etudiants; we filter)
-    const etudiants = await this.adminService.getEtudiants(emploi.classeId);
-
-    return {
-      id: emploi.id,
-      date: emploi.date,
-      heureDebut: emploi.heureDebut,
-      heureFin: emploi.heureFin,
-      semestre: emploi.semestre,
-      matiereId: emploi.matiereId,
-      matiere: matiere?.nom || null,
-      enseignantId: emploi.enseignantId,
-      enseignant: enseignant ? `${enseignant.nom} ${enseignant.prenom}` : null,
-      salleId: emploi.salleId,
-      salle: salle?.nom || null,
-      classeId: emploi.classeId,
-      classe: classe?.nom || null,
-      etudiants: etudiants || []
-    };
-  }
-
   private async groupByDay(emplois: EmploiDuTemps[]) {
     const grouped = {};
     for (const emploi of emplois) {
@@ -139,17 +88,12 @@ export class EmploiDuTempsService {
       const classe = await this.adminService.getClasse(emploi.classeId);
 
       grouped[jour].push({
-        id: emploi.id,
         heureDebut: emploi.heureDebut,
         heureFin: emploi.heureFin,
-        matiereId: emploi.matiereId,
-        matiere: matiere?.nom || null,
-        enseignantId: emploi.enseignantId,
-        enseignant: enseignant ? `${enseignant.nom} ${enseignant.prenom}` : null,
-        salleId: emploi.salleId,
-        salle: salle?.nom || null,
-        classeId: emploi.classeId,
-        classe: classe?.nom || null
+        matiere: matiere.nom,
+        enseignant: `${enseignant.nom} ${enseignant.prenom}`,
+        salle: salle.nom,
+        classe: classe.nom
       });
     }
     return grouped;
