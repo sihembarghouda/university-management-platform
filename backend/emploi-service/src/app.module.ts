@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { EmploiDuTempsModule } from './emploi-du-temps/emploi-du-temps.module';
 import { AdminModule } from './admin/admin.module';
-import { ConfigModule } from '@nestjs/config';
 import { join } from 'path';
 
 @Module({

@@ -16,7 +16,7 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:3000/api";
+  const API_BASE = process.env.REACT_APP_AUTH_API_URL || "http://localhost:3001/api";
 
   // Configure axios defaults
   axios.defaults.baseURL = API_BASE;
@@ -35,6 +35,23 @@ export const AuthProvider = ({ children }) => {
         console.error("Error parsing user data:", error);
         logout();
       }
+    } else if (process.env.NODE_ENV === 'development') {
+      // Mode test automatique avec utilisateur directeur
+      const testDirector = {
+        id: 1,
+        email: "directeur.test@univ.tn",
+        prenom: "Ahmed",
+        nom: "Directeur",
+        role: "directeur_departement",
+        departement: "Informatique",
+        specialite: "Génie Logiciel"
+      };
+      
+      console.log('🧪 Mode test activé - Connexion automatique comme directeur');
+      setUser(testDirector);
+      setIsAuthenticated(true);
+      localStorage.setItem("user", JSON.stringify(testDirector));
+      localStorage.setItem("token", "test-token-director");
     }
     setLoading(false);
   }, []);

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Dashboard Directeur</title>
+    <style>
+        :root {
+            --primary-blue: #1e5ba8;
+            --secondary-turquoise: #5eb3b7;
+            --accent-yellow: #ffc107;
+            --white: #ffffff;
+            --light-gray: #f5f7fa;
+            --text-dark: #2c3e50;
+            --text-light: #6c757d;
+            --shadow: rgba(30, 91, 168, 0.1);
+            --shadow-hover: rgba(30, 91, 168, 0.2);
+            --border-radius: 12px;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--light-gray) 0%, #e8f0f8 100%);
+            color: var(--text-dark);
+            line-height: 1.6;
+            padding: 2rem;
+        }
+
+        .test-dashboard {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, #164a8c 100%);
+            color: var(--white);
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 8px var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .stat-icon {
+            font-size: 2rem;
+        }
+
+        .stat-info h3 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+        }
+
+        .stat-info p {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .actions-section {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .actions-section h2 {
+            color: var(--primary-blue);
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, #164a8c 100%);
+            color: var(--white);
+            border: none;
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.75rem;
+            transition: var(--transition);
+            box-shadow: 0 2px 8px var(--shadow);
+            text-align: left;
+            min-height: 120px;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 20px var(--shadow-hover);
+            background: linear-gradient(135deg, var(--secondary-turquoise) 0%, #4a9a9e 100%);
+        }
+
+        .action-label {
+            font-size: 1.1rem;
+            font-weight: 600;
+            width: 100%;
+            display: block;
+        }
+
+        .action-description {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            line-height: 1.4;
+            width: 100%;
+            display: block;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-dashboard">
+        <div class="header">
+            <h1>🎯 Test Dashboard Directeur</h1>
+            <p>Interface de test pour vérifier l'affichage des boutons</p>
+        </div>
+
+        <div class="success-message">
+            ✅ Dashboard chargé avec succès ! Les boutons sont maintenant visibles.
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">👨‍🏫</div>
+                <div class="stat-info">
+                    <h3>24</h3>
+                    <p>Enseignants</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">👥</div>
+                <div class="stat-info">
+                    <h3>450</h3>
+                    <p>Étudiants</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📚</div>
+                <div class="stat-info">
+                    <h3>18</h3>
+                    <p>Cours actifs</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-info">
+                    <h3>82%</h3>
+                    <p>Taux de réussite</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="actions-section">
+            <h2>Actions disponibles</h2>
+            <div class="actions-grid">
+                <button class="action-btn" onclick="alert('Redirection vers ScheduleBuilder')">
+                    <span class="action-label">📋 Créer emploi du temps</span>
+                    <span class="action-description">Créer un nouvel emploi du temps avec drag & drop</span>
+                </button>
+                <button class="action-btn" onclick="alert('Redirection vers ScheduleViewer')">
+                    <span class="action-label">📅 Voir emplois existants</span>
+                    <span class="action-description">Consulter et gérer les emplois existants</span>
+                </button>
+                <button class="action-btn" onclick="alert('Ouverture admin panel')">
+                    <span class="action-label">👥 Gérer utilisateurs</span>
+                    <span class="action-description">Administration des comptes utilisateurs</span>
+                </button>
+                <button class="action-btn" onclick="alert('Gestion enseignants')">
+                    <span class="action-label">👨‍🏫 Gérer enseignants</span>
+                    <span class="action-description">Gestion du personnel enseignant</span>
+                </button>
+                <button class="action-btn" onclick="alert('Gestion étudiants')">
+                    <span class="action-label">👨‍🎓 Gérer étudiants</span>
+                    <span class="action-description">Gestion des étudiants du département</span>
+                </button>
+                <button class="action-btn" onclick="alert('Rapports')">
+                    <span class="action-label">📊 Rapports</span>
+                    <span class="action-description">Générer des rapports département</span>
+                </button>
+                <button class="action-btn" onclick="alert('Budget')">
+                    <span class="action-label">💰 Budget</span>
+                    <span class="action-description">Suivi budgétaire du département</span>
+                </button>
+                <button class="action-btn" onclick="alert('Évaluations')">
+                    <span class="action-label">📝 Évaluations</span>
+                    <span class="action-description">Gestion des évaluations</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

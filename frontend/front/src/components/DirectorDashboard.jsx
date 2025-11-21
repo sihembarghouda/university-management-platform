@@ -20,12 +20,18 @@ const DirectorDashboard = () => {
   });
 
   useEffect(() => {
+    console.log('🚀 DirectorDashboard useEffect déclenché');
+    console.log('👤 Utilisateur:', user);
     loadDashboardData();
   }, []);
 
   const loadDashboardData = async () => {
+    console.log('🔄 Chargement des données du dashboard directeur...');
+    console.log('⏰ Début du timeout de 300ms');
+    
     // Simulate API call for dashboard data
     setTimeout(() => {
+      console.log('⏰ Timeout terminé, création des données...');
       const data = {
         title: "Espace Directeur de Département",
         stats: [
@@ -35,24 +41,29 @@ const DirectorDashboard = () => {
           { label: "Taux de réussite", value: "82%", icon: "📊" },
         ],
         actions: [
-          { label: "Gérer utilisateurs", icon: "👥", action: "manageUsers" },
-          { label: "Gérer enseignants", icon: "👨‍🏫", action: "manageTeachers" },
-          { label: "Gérer étudiants", icon: "👥", action: "manageStudents" },
-          { label: "Planifier cours", icon: "📅", action: "scheduleCourses" },
-          { label: "Rapports", icon: "📊", action: "reports" },
-          { label: "Budget", icon: "💰", action: "budget" },
-          { label: "Évaluations", icon: "📝", action: "evaluations" },
+          { label: "📋 Créer emploi du temps", description: "Créer un nouvel emploi du temps avec drag & drop", action: "createSchedule" },
+          { label: "📅 Voir emplois existants", description: "Consulter et gérer les emplois existants", action: "viewSchedules" },
+          { label: "👥 Gérer utilisateurs", description: "Administration des comptes utilisateurs", action: "manageUsers" },
+          { label: "👨‍🏫 Gérer enseignants", description: "Gestion du personnel enseignant", action: "manageTeachers" },
+          { label: "👨‍🎓 Gérer étudiants", description: "Gestion des étudiants du département", action: "manageStudents" },
+          { label: "📊 Rapports", description: "Générer des rapports département", action: "reports" },
+          { label: "💰 Budget", description: "Suivi budgétaire du département", action: "budget" },
+          { label: "📝 Évaluations", description: "Gestion des évaluations", action: "evaluations" },
         ],
       };
+      console.log('✅ Données chargées:', data);
       setDashboardData(data);
       setLoading(false);
-    }, 1000);
+    }, 300);
   };
 
   const handleAction = (action) => {
     switch (action) {
+      case "createSchedule":
+        navigate("/schedule-builder");
+        break;
       case "manageUsers":
-        navigate("/admin-panel");
+        navigate("/admin");
         break;
       case "manageTeachers":
         alert("Ouverture de la gestion des enseignants...");
@@ -60,8 +71,8 @@ const DirectorDashboard = () => {
       case "manageStudents":
         alert("Ouverture de la gestion des étudiants...");
         break;
-      case "scheduleCourses":
-        alert("Ouverture de la planification des cours...");
+      case "viewSchedules":
+        navigate("/schedule-viewer");
         break;
       case "reports":
         alert("Ouverture des rapports...");
@@ -98,7 +109,10 @@ const DirectorDashboard = () => {
     navigate("/");
   };
 
+  console.log('🎨 Rendu DirectorDashboard - loading:', loading, 'dashboardData:', dashboardData);
+
   if (loading) {
+    console.log('⏳ Affichage de l\'écran de chargement');
     return (
       <div className="dashboard-loading">
         <div className="loading-spinner"></div>
@@ -106,6 +120,18 @@ const DirectorDashboard = () => {
       </div>
     );
   }
+
+  if (!dashboardData) {
+    console.log('❌ Aucune donnée de dashboard disponible');
+    return (
+      <div className="dashboard-loading">
+        <div className="loading-spinner"></div>
+        <p>Erreur de chargement des données...</p>
+      </div>
+    );
+  }
+
+  console.log('✅ Rendu du dashboard avec', dashboardData.actions?.length, 'actions');
 
   return (
     <div className="dashboard">
@@ -284,8 +310,10 @@ const DirectorDashboard = () => {
                 className="action-btn"
                 onClick={() => handleAction(action.action)}
               >
-                <span className="action-icon">{action.icon}</span>
                 <span className="action-label">{action.label}</span>
+                {action.description && (
+                  <span className="action-description">{action.description}</span>
+                )}
               </button>
             ))}
           </div>

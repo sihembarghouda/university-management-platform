@@ -1,8 +1,8 @@
 import axios from "axios";
 
 // Configuration des URLs de base pour chaque service
-export const AUTH_API_URL = process.env.REACT_APP_AUTH_API_URL || "http://localhost:3000/api";
-export const ADMIN_API_URL = process.env.REACT_APP_ADMIN_API_URL || "http://localhost:3000";
+export const AUTH_API_URL = process.env.REACT_APP_AUTH_API_URL || "http://localhost:3001/api";
+export const ADMIN_API_URL = process.env.REACT_APP_ADMIN_API_URL || "http://localhost:3002";
 
 // Instance axios pour le service d'authentification
 export const authApi = axios.create({

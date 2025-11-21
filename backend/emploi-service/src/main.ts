@@ -19,5 +19,6 @@ async function bootstrap() {
   const port = parseInt(process.env.PORT || process.env.APP_PORT || '3010', 10);
   await app.listen(port);
   console.log(`🚀 Emploi-service listening on port ${port}`);
+  console.log(`📘 Swagger UI: http://localhost:${port}/api`);
 }
 bootstrap();

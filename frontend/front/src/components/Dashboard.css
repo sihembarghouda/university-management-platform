@@ -522,7 +522,7 @@ input:focus-visible {
 
 .actions-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1.5rem;
 }
 
@@ -540,6 +540,8 @@ input:focus-visible {
   transition: var(--transition);
   box-shadow: 0 2px 8px var(--shadow);
   text-align: left;
+  min-height: 120px;
+  position: relative;
 }
 
 .action-btn:hover {
@@ -551,12 +553,17 @@ input:focus-visible {
 .action-label {
   font-size: 1.1rem;
   font-weight: 600;
+  width: 100%;
+  display: block;
 }
 
 .action-description {
   font-size: 0.85rem;
   opacity: 0.9;
   line-height: 1.4;
+  margin-top: 0.5rem;
+  width: 100%;
+  display: block;
 }
 
 /* Responsive Design */
@@ -670,6 +677,51 @@ input:focus-visible {
   .action-description {
     font-size: 0.8rem;
   }
+}
+
+/* Icon Styling */
+.stat-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.action-icon {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.stat-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.stat-info h3 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--primary-blue);
+  margin: 0;
+  line-height: 1;
+}
+
+.stat-info p {
+  color: var(--text-light);
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0;
+}
+
+/* Actions Grid Enhancement */
+.actions-section h2 {
+  color: var(--primary-blue);
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  text-align: center;
 }
 
 /* Scrollbar Styling */

@@ -4,7 +4,7 @@ import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class AdminService {
-  private readonly adminServiceUrl = 'http://localhost:3002';
+  private readonly adminServiceUrl = process.env.ADMIN_SERVICE_URL || 'http://localhost:3002';
 
   constructor(private readonly httpService: HttpService) {}
 
