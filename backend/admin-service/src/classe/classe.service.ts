@@ -92,14 +92,14 @@ export class ClasseService {
       .getMany();
 
     console.log('🔍 [ClasseService] Classes chargées:', classes.length);
-    if (classes.length > 0) {
-      console.log('🔍 [ClasseService] Première classe:', classes[0]);
-      console.log('🔍 [ClasseService] Specialite:', classes[0]?.specialite);
-      console.log(
-        '🔍 [ClasseService] Departement:',
-        classes[0]?.specialite?.departement,
-      );
-    }
+    
+    // Log détaillé pour chaque classe
+    classes.forEach(classe => {
+      const deptId = classe.specialite?.departement?.id;
+      const deptNom = classe.specialite?.departement?.nom;
+      const specNom = classe.specialite?.nom;
+      console.log(`🔍 [ClasseService] Classe: ${classe.nom} | Spécialité: ${specNom || 'N/A'} | Département: ${deptNom || 'N/A'} (ID: ${deptId || 'N/A'})`);
+    });
 
     return classes;
   }

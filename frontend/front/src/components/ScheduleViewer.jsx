@@ -15,6 +15,15 @@ const ScheduleViewer = () => {
   const [scheduleData, setScheduleData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [editingCell, setEditingCell] = useState(null);
+  const [editForm, setEditForm] = useState({
+    enseignantId: '',
+    salleId: '',
+    matiereId: ''
+  });
+  const [teachers, setTeachers] = useState([]);
+  const [rooms, setRooms] = useState([]);
+  const [subjects, setSubjects] = useState([]);
 
   // Créneaux horaires standards
   const timeSlots = [
@@ -36,6 +45,7 @@ const ScheduleViewer = () => {
 
   useEffect(() => {
     loadClasses();
+    loadResources();
   }, []);
 
   useEffect(() => {
@@ -48,15 +58,29 @@ const ScheduleViewer = () => {
     try {
       setLoading(true);
       const classesData = await scheduleService.getClasses();
-      setClasses(classesData);
+      
+      // Filtrer les classes selon le département du chef connecté
+      let filteredClasses = classesData;
+      if (user?.role === 'directeur_departement' && user?.departement?.id) {
+        console.log('🔍 [ScheduleViewer] Filtering classes for department:', user.departement);
+        console.log('🔍 [ScheduleViewer] All classes:', classesData);
+        filteredClasses = classesData.filter(classe => {
+          const classeDeptId = classe.specialite?.departement?.id;
+          console.log(`🔍 [ScheduleViewer] Classe ${classe.nom}: deptId=${classeDeptId}`);
+          return classeDeptId === user.departement.id;
+        });
+        console.log('🔍 [ScheduleViewer] Filtered classes:', filteredClasses);
+      }
+      
+      setClasses(filteredClasses);
       
       const classIdParam = searchParams.get('classId');
       const semestreParam = searchParams.get('semestre');
       
       if (classIdParam) {
         setSelectedClass(classIdParam);
-      } else if (classesData.length > 0) {
-        setSelectedClass(classesData[0].id.toString());
+      } else if (filteredClasses.length > 0) {
+        setSelectedClass(filteredClasses[0].id.toString());
       }
       
       if (semestreParam) {
@@ -68,6 +92,21 @@ const ScheduleViewer = () => {
       console.error('Erreur lors du chargement des classes:', err);
       setError('Erreur lors du chargement des classes: ' + (err.message || 'Service indisponible'));
       setLoading(false);
+    }
+  };
+
+  const loadResources = async () => {
+    try {
+      const [teachersData, roomsData, subjectsData] = await Promise.all([
+        scheduleService.getTeachers(),
+        scheduleService.getRooms(),
+        scheduleService.getSubjects()
+      ]);
+      setTeachers(teachersData);
+      setRooms(roomsData);
+      setSubjects(subjectsData);
+    } catch (err) {
+      console.error('Erreur lors du chargement des ressources:', err);
     }
   };
 
@@ -136,6 +175,60 @@ const ScheduleViewer = () => {
     };
   };
 
+  const handleEditClick = (day, timeSlot, course) => {
+    setEditingCell({ day, timeSlot });
+    // Trouver les IDs correspondants
+    const teacher = teachers.find(t => `${t.nom} ${t.prenom}` === course.enseignant);
+    const room = rooms.find(r => r.nom === course.salle);
+    const subject = subjects.find(s => s.nom === course.matiere);
+    
+    setEditForm({
+      emploiId: course.id,
+      enseignantId: teacher?.id || '',
+      salleId: room?.id || '',
+      matiereId: subject?.id || ''
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingCell(null);
+    setEditForm({ enseignantId: '', salleId: '', matiereId: '' });
+  };
+
+  const handleSaveEdit = async () => {
+    try {
+      await scheduleService.updateEmploi(editForm.emploiId, {
+        enseignantId: parseInt(editForm.enseignantId),
+        salleId: parseInt(editForm.salleId),
+        matiereId: parseInt(editForm.matiereId)
+      });
+      
+      setEditingCell(null);
+      setEditForm({ enseignantId: '', salleId: '', matiereId: '' });
+      await loadSchedule(); // Recharger l'emploi du temps
+      
+      alert('✅ Emploi du temps modifié avec succès');
+    } catch (err) {
+      console.error('Erreur lors de la modification:', err);
+      alert('❌ Erreur lors de la modification: ' + (err.response?.data?.message || err.message));
+    }
+  };
+
+  const handleDeleteCourse = async (day, timeSlot, course) => {
+    if (!window.confirm(`Voulez-vous vraiment supprimer ce cours ?\n${course.matiere} - ${course.enseignant}`)) {
+      return;
+    }
+
+    try {
+      await scheduleService.deleteEmploi(course.id);
+      await loadSchedule(); // Recharger l'emploi du temps
+      alert('✅ Cours supprimé avec succès');
+    } catch (err) {
+      console.error('Erreur lors de la suppression:', err);
+      alert('❌ Erreur lors de la suppression: ' + (err.response?.data?.message || err.message));
+    }
+  };
+
 
 
   if (loading) {
@@ -150,7 +243,8 @@ const ScheduleViewer = () => {
   if (error) {
     return (
       <div className="schedule-viewer-error">
-        <h2>❌ Erreur</h2>
+        <div className="error-icon">⚠</div>
+        <h2>Erreur</h2>
         <p>{error}</p>
         <button onClick={() => navigate('/director-dashboard')}>
           Retour au dashboard
@@ -196,11 +290,19 @@ const ScheduleViewer = () => {
               </option>
             ))}
           </select>
+          {scheduleData && Object.keys(scheduleData).length > 0 && (
+            <button 
+              className="modify-btn"
+              onClick={() => navigate(`/schedule-builder?classId=${selectedClass}&semestre=${semestre}&mode=edit`)}
+            >
+              <span className="btn-icon">✏</span> Modifier
+            </button>
+          )}
           <button 
             className="create-btn"
             onClick={() => navigate('/schedule-builder')}
           >
-            ➕ Nouveau
+            <span className="btn-icon">+</span> Nouveau
           </button>
         </div>
       </header>
@@ -208,7 +310,8 @@ const ScheduleViewer = () => {
       <div className="viewer-content">
         {!scheduleData || Object.keys(scheduleData).length === 0 ? (
           <div className="empty-schedule">
-            <h3>📋 Aucun emploi du temps</h3>
+            <div className="empty-icon">📋</div>
+            <h3>Aucun emploi du temps</h3>
             <p>
               {selectedClass && classes.find(c => c.id.toString() === selectedClass)?.nom}
               {' - Semestre '}{semestre}
@@ -218,7 +321,7 @@ const ScheduleViewer = () => {
               className="create-btn"
               onClick={() => navigate('/schedule-builder')}
             >
-              ➕ Créer un emploi du temps
+              <span className="btn-icon">+</span> Créer un emploi du temps
             </button>
           </div>
         ) : (
@@ -229,7 +332,7 @@ const ScheduleViewer = () => {
               </h3>
               <div className="preview-actions">
                 <button onClick={() => window.print()}>
-                  🖨️ Imprimer
+                  <span className="btn-icon">🖨</span> Imprimer
                 </button>
               </div>
             </div>
@@ -250,17 +353,72 @@ const ScheduleViewer = () => {
                     {weekDays.map(day => (
                       <div key={`${day}-${timeSlot}`} className="schedule-cell-preview">
                         {grid[day]?.[timeSlot] ? (
-                          <div style={getCourseStyle(grid[day][timeSlot])}>
-                            <div className="course-name">
-                              {grid[day][timeSlot].matiere}
+                          editingCell?.day === day && editingCell?.timeSlot === timeSlot ? (
+                            <div className="edit-course-form">
+                              <select
+                                value={editForm.matiereId}
+                                onChange={(e) => setEditForm({...editForm, matiereId: e.target.value})}
+                                className="edit-select"
+                              >
+                                <option value="">Matière...</option>
+                                {subjects.map(s => (
+                                  <option key={s.id} value={s.id}>{s.nom}</option>
+                                ))}
+                              </select>
+                              <select
+                                value={editForm.enseignantId}
+                                onChange={(e) => setEditForm({...editForm, enseignantId: e.target.value})}
+                                className="edit-select"
+                              >
+                                <option value="">Enseignant...</option>
+                                {teachers.map(t => (
+                                  <option key={t.id} value={t.id}>{t.nom} {t.prenom}</option>
+                                ))}
+                              </select>
+                              <select
+                                value={editForm.salleId}
+                                onChange={(e) => setEditForm({...editForm, salleId: e.target.value})}
+                                className="edit-select"
+                              >
+                                <option value="">Salle...</option>
+                                {rooms.map(r => (
+                                  <option key={r.id} value={r.id}>{r.nom}</option>
+                                ))}
+                              </select>
+                              <div className="edit-actions">
+                                <button onClick={handleSaveEdit} className="save-btn">✓</button>
+                                <button onClick={handleCancelEdit} className="cancel-btn">✕</button>
+                              </div>
                             </div>
-                            <div className="course-teacher">
-                              {grid[day][timeSlot].enseignant}
+                          ) : (
+                            <div style={getCourseStyle(grid[day][timeSlot])}>
+                              <div className="course-name">
+                                {grid[day][timeSlot].matiere}
+                              </div>
+                              <div className="course-teacher">
+                                {grid[day][timeSlot].enseignant}
+                              </div>
+                              <div className="course-room">
+                                {grid[day][timeSlot].salle}
+                              </div>
+                              <div className="course-actions">
+                                <button 
+                                  onClick={() => handleEditClick(day, timeSlot, grid[day][timeSlot])}
+                                  className="edit-course-btn"
+                                  title="Modifier"
+                                >
+                                  ✎
+                                </button>
+                                <button 
+                                  onClick={() => handleDeleteCourse(day, timeSlot, grid[day][timeSlot])}
+                                  className="delete-course-btn"
+                                  title="Supprimer"
+                                >
+                                  ✕
+                                </button>
+                              </div>
                             </div>
-                            <div className="course-room">
-                              {grid[day][timeSlot].salle}
-                            </div>
-                          </div>
+                          )
                         ) : (
                           <div className="empty-cell-preview">-</div>
                         )}

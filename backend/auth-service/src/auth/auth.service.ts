@@ -143,7 +143,10 @@ export class AuthService {
 
     // 3️⃣ Vérifier dans la table enseignant avec requête SQL brute
     const enseignantResult = await this.dataSource.query(
-      'SELECT * FROM enseignant WHERE email = $1 LIMIT 1',
+      `SELECT e.*, d.id as "departementId", d.nom as "departementNom" 
+       FROM enseignant e 
+       LEFT JOIN departement d ON e."departementId" = d.id 
+       WHERE e.email = $1 LIMIT 1`,
       [email]
     );
     
@@ -182,18 +185,30 @@ export class AuthService {
       const access_token = await this.jwt.signAsync(payload);
 
       console.log('✅ [Login] Enseignant success! Role:', role);
+      
+      // Construire l'objet user avec le département si c'est un directeur
+      const userData: any = {
+        id: enseignant.id,
+        email: enseignant.email,
+        role: role,
+        nom: enseignant.nom,
+        prenom: enseignant.prenom,
+        cin: enseignant.cin,
+      };
+      
+      // Ajouter le département si présent
+      if (enseignant.departementId) {
+        userData.departement = {
+          id: enseignant.departementId,
+          nom: enseignant.departementNom
+        };
+      }
+      
       return {
         success: true,
         message: 'Connexion réussie',
         type: role,
-        user: {
-          id: enseignant.id,
-          email: enseignant.email,
-          role: role,
-          nom: enseignant.nom,
-          prenom: enseignant.prenom,
-          cin: enseignant.cin,
-        },
+        user: userData,
         token: access_token,
       };
     }

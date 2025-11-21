@@ -1,8 +1,9 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { EmploiDuTemps } from './entities/emploi-du-temps.entity';
 import { CreateEmploiDto } from './dto/create-emploi.dto';
+import { UpdateEmploiDto } from './dto/update-emploi.dto';
 import { AdminService } from '../admin/admin.service';
 
 @Injectable()
@@ -71,6 +72,18 @@ export class EmploiDuTempsService {
     return this.groupByDay(emplois);
   }
 
+  async getScheduleForEtudiant(etudiantId: number, semestre: number) {
+    // Récupérer l'étudiant pour obtenir sa classe
+    const etudiant = await this.adminService.getEtudiant(etudiantId);
+    
+    if (!etudiant.classe || !etudiant.classe.id) {
+      throw new NotFoundException(`L'étudiant n'est pas assigné à une classe`);
+    }
+
+    // Retourner l'emploi du temps de sa classe
+    return this.getScheduleForClass(etudiant.classe.id, semestre);
+  }
+
   async getScheduleForEnseignant(enseignantId: number, semestre: number) {
     await this.adminService.getEnseignant(enseignantId);
 
@@ -120,5 +133,61 @@ export class EmploiDuTempsService {
       });
     }
     return grouped;
+  }
+
+  async update(id: number, dto: UpdateEmploiDto): Promise<EmploiDuTemps> {
+    const emploi = await this.emploiRepo.findOne({ where: { id } });
+    if (!emploi) {
+      throw new NotFoundException(`Emploi du temps avec ID ${id} introuvable`);
+    }
+
+    // Validation du semestre si fourni
+    if (dto.semestre && ![1, 2].includes(dto.semestre)) {
+      throw new BadRequestException('Le semestre doit être 1 ou 2.');
+    }
+
+    // Vérification des IDs si fournis
+    if (dto.enseignantId) await this.adminService.getEnseignant(dto.enseignantId);
+    if (dto.salleId) await this.adminService.getSalle(dto.salleId);
+    if (dto.classeId) await this.adminService.getClasse(dto.classeId);
+    if (dto.matiereId) await this.adminService.getMatiere(dto.matiereId);
+
+    // Vérification des conflits si date/heure ou ressources sont modifiées
+    const dateToCheck = dto.date || emploi.date;
+    const heureDebutToCheck = dto.heureDebut || emploi.heureDebut;
+    const heureFinToCheck = dto.heureFin || emploi.heureFin;
+    const salleToCheck = dto.salleId || emploi.salleId;
+    const enseignantToCheck = dto.enseignantId || emploi.enseignantId;
+    const classeToCheck = dto.classeId || emploi.classeId;
+
+    const conflict = await this.emploiRepo.createQueryBuilder('emploi')
+      .where('emploi.id != :id', { id })
+      .andWhere('emploi.date = :date', { date: dateToCheck })
+      .andWhere('(emploi.salleId = :salleId OR emploi.enseignantId = :enseignantId OR emploi.classeId = :classeId)', {
+        salleId: salleToCheck,
+        enseignantId: enseignantToCheck,
+        classeId: classeToCheck,
+      })
+      .andWhere('emploi.heureDebut < :heureFin AND emploi.heureFin > :heureDebut', {
+        heureDebut: heureDebutToCheck,
+        heureFin: heureFinToCheck,
+      })
+      .getOne();
+
+    if (conflict) {
+      throw new BadRequestException('Conflit détecté : salle, enseignant ou classe déjà occupé.');
+    }
+
+    // Mise à jour
+    Object.assign(emploi, dto);
+    return this.emploiRepo.save(emploi);
+  }
+
+  async remove(id: number): Promise<void> {
+    const emploi = await this.emploiRepo.findOne({ where: { id } });
+    if (!emploi) {
+      throw new NotFoundException(`Emploi du temps avec ID ${id} introuvable`);
+    }
+    await this.emploiRepo.remove(emploi);
   }
 }

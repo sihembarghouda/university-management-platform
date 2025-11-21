@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { scheduleService } from '../services/scheduleService';
 import './ScheduleBuilder.css';
@@ -7,6 +7,7 @@ import './ScheduleBuilder.css';
 const ScheduleBuilder = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   
   const [classes, setClasses] = useState([]);
   const [teachers, setTeachers] = useState([]);
@@ -39,6 +40,18 @@ const ScheduleBuilder = () => {
 
   useEffect(() => {
     loadData();
+    
+    // Check if we're in edit mode with params
+    const classIdParam = searchParams.get('classId');
+    const semestreParam = searchParams.get('semestre');
+    const modeParam = searchParams.get('mode');
+    
+    if (classIdParam) {
+      setSelectedClass(classIdParam);
+    }
+    if (semestreParam) {
+      setSemestre(parseInt(semestreParam));
+    }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadData = async () => {
@@ -53,7 +66,20 @@ const ScheduleBuilder = () => {
         scheduleService.getRooms()
       ]);
 
-      setClasses(classesData);
+      // Filtrer les classes selon le département du chef connecté
+      let filteredClasses = classesData;
+      if (user?.role === 'directeur_departement' && user?.departement?.id) {
+        console.log('🔍 [ScheduleBuilder] Filtering classes for department:', user.departement);
+        console.log('🔍 [ScheduleBuilder] All classes:', classesData);
+        filteredClasses = classesData.filter(classe => {
+          const classeDeptId = classe.specialite?.departement?.id;
+          console.log(`🔍 [ScheduleBuilder] Classe ${classe.nom}: deptId=${classeDeptId}`);
+          return classeDeptId === user.departement.id;
+        });
+        console.log('🔍 [ScheduleBuilder] Filtered classes:', filteredClasses);
+      }
+
+      setClasses(filteredClasses);
       setTeachers(teachersData);
       setSubjects(subjectsData);
       setRooms(roomsData);
@@ -67,19 +93,28 @@ const ScheduleBuilder = () => {
   };
 
   useEffect(() => {
-    if (selectedClass) {
+    if (selectedClass && teachers.length > 0 && subjects.length > 0 && rooms.length > 0) {
       loadExistingSchedule();
-    } else {
-      setSchedule({});
+    } else if (!selectedClass) {
+      initializeSchedule();
     }
-  }, [selectedClass, semestre]); // eslint-disable-line react-hooks/exhaustive-deps
+    // If selectedClass is set but data not loaded, wait for data to load
+  }, [selectedClass, semestre, teachers, subjects, rooms]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadExistingSchedule = async () => {
     if (!selectedClass) return;
     
+    // Make sure we have the required data loaded
+    if (teachers.length === 0 || subjects.length === 0 || rooms.length === 0) {
+      console.log('Waiting for data to load...');
+      return;
+    }
+    
     try {
       setLoading(true);
       const data = await scheduleService.getScheduleByClass(parseInt(selectedClass), semestre);
+      
+      console.log('Loaded schedule data:', data);
       
       const newSchedule = {};
       weekDays.forEach(day => {
@@ -89,27 +124,39 @@ const ScheduleBuilder = () => {
         });
       });
       
-      Object.entries(data).forEach(([jour, courses]) => {
-        courses.forEach(course => {
-          const timeSlot = `${course.heureDebut}-${course.heureFin}`;
-          if (newSchedule[jour] && newSchedule[jour][timeSlot] === null) {
-            const subject = subjects.find(s => s.id === course.matiereId) || { id: course.matiereId, nom: course.matiere, couleur: '#ccc' };
-            const teacher = teachers.find(t => t.id === course.enseignantId) || { id: course.enseignantId, nom: course.enseignant.split(' ')[0] || '', prenom: course.enseignant.split(' ')[1] || '' };
-            const room = rooms.find(r => r.id === course.salleId) || { id: course.salleId, nom: course.salle };
-            
-            newSchedule[jour][timeSlot] = {
-              id: course.id,
-              subject,
-              teacher,
-              room,
-              day: jour,
-              timeSlot,
-              class: selectedClass
-            };
-          }
+      if (data && Object.keys(data).length > 0) {
+        Object.entries(data).forEach(([jour, courses]) => {
+          courses.forEach(course => {
+            const timeSlot = `${course.heureDebut}-${course.heureFin}`;
+            if (newSchedule[jour] && timeSlots.includes(timeSlot)) {
+              // Find matching items from loaded data
+              const subject = subjects.find(s => s.nom === course.matiere || s.id === course.matiereId);
+              const teacherName = course.enseignant.split(' ');
+              const teacher = teachers.find(t => 
+                `${t.nom} ${t.prenom}` === course.enseignant || 
+                t.id === course.enseignantId
+              );
+              const room = rooms.find(r => r.nom === course.salle || r.id === course.salleId);
+              
+              console.log(`Matching for ${jour} ${timeSlot}:`, { subject, teacher, room, course });
+              
+              if (subject && teacher && room) {
+                newSchedule[jour][timeSlot] = {
+                  id: course.id,
+                  subject,
+                  teacher,
+                  room,
+                  day: jour,
+                  timeSlot,
+                  class: selectedClass
+                };
+              }
+            }
+          });
         });
-      });
+      }
       
+      console.log('Final schedule:', newSchedule);
       setSchedule(newSchedule);
       setLoading(false);
     } catch (err) {
@@ -225,7 +272,8 @@ const ScheduleBuilder = () => {
 
     try {
       // Valider l'emploi du temps
-      const courses = [];
+      const coursesToCreate = [];
+      const coursesToUpdate = [];
       const dayToDate = {
         'Lundi': 1,
         'Mardi': 2,
@@ -248,32 +296,63 @@ const ScheduleBuilder = () => {
             const targetDate = new Date(today);
             targetDate.setDate(today.getDate() + diff);
             
-            courses.push({
+            const courseData = {
               subjectId: course.subject.id,
               teacherId: course.teacher.id,
               roomId: course.room.id,
               date: targetDate.toISOString().split('T')[0],
               heureDebut: heureDebut.trim(),
               heureFin: heureFin.trim()
-            });
+            };
+            
+            // Check if this is an existing course (has id) or a new one
+            if (course.id) {
+              coursesToUpdate.push({
+                id: course.id,
+                ...courseData
+              });
+            } else {
+              coursesToCreate.push(courseData);
+            }
           }
         });
       });
 
-      if (courses.length === 0) {
+      if (coursesToCreate.length === 0 && coursesToUpdate.length === 0) {
         alert('Aucun cours complet défini dans l\'emploi du temps.\nAssurez-vous d\'assigner un enseignant ET une salle à chaque cours.');
         return;
       }
 
-      // Sauvegarder l'emploi du temps
-      const scheduleData = {
-        classId: parseInt(selectedClass),
-        courses,
-        semestre
-      };
+      // Update existing courses
+      for (const course of coursesToUpdate) {
+        try {
+          await scheduleService.updateEmploi(course.id, {
+            matiereId: course.subjectId,
+            enseignantId: course.teacherId,
+            salleId: course.roomId,
+            date: course.date,
+            heureDebut: course.heureDebut,
+            heureFin: course.heureFin,
+            semestre
+          });
+        } catch (err) {
+          console.error('Erreur lors de la mise à jour du cours:', err);
+          throw err;
+        }
+      }
+
+      // Create new courses
+      if (coursesToCreate.length > 0) {
+        const scheduleData = {
+          classId: parseInt(selectedClass),
+          courses: coursesToCreate,
+          semestre
+        };
+        
+        await scheduleService.saveSchedule(scheduleData);
+      }
       
-      await scheduleService.saveSchedule(scheduleData);
-      alert('Emploi du temps sauvegardé avec succès !');
+      alert(`Emploi du temps sauvegardé avec succès !\n${coursesToUpdate.length} cours mis à jour, ${coursesToCreate.length} cours créés.`);
       
       // Rediriger vers le visualiseur d'emploi du temps pour la classe créée
       navigate(`/schedule-viewer?classId=${selectedClass}&semestre=${semestre}`);
