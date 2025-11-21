@@ -12,7 +12,7 @@ export class AdminService {
   async getEnseignant(id: number) {
     try {
       const response = await firstValueFrom(
-        this.httpService.get(`${this.adminServiceUrl}/enseignants/${id}`)
+        this.httpService.get(`${this.adminServiceUrl}/enseignant/${id}`)
       );
       return response.data;
     } catch (error) {
@@ -27,7 +27,7 @@ export class AdminService {
   async getEnseignants() {
     try {
       const response = await firstValueFrom(
-        this.httpService.get(`${this.adminServiceUrl}/enseignants`)
+        this.httpService.get(`${this.adminServiceUrl}/enseignant`)
       );
       return response.data;
     } catch (error) {
@@ -42,7 +42,7 @@ export class AdminService {
   async getMatiere(id: number) {
     try {
       const response = await firstValueFrom(
-        this.httpService.get(`${this.adminServiceUrl}/matieres/${id}`)
+        this.httpService.get(`${this.adminServiceUrl}/matiere/${id}`)
       );
       return response.data;
     } catch (error) {
@@ -57,7 +57,7 @@ export class AdminService {
   async getMatieres() {
     try {
       const response = await firstValueFrom(
-        this.httpService.get(`${this.adminServiceUrl}/matieres`)
+        this.httpService.get(`${this.adminServiceUrl}/matiere`)
       );
       return response.data;
     } catch (error) {
@@ -102,7 +102,7 @@ export class AdminService {
   async getClasse(id: number) {
     try {
       const response = await firstValueFrom(
-        this.httpService.get(`${this.adminServiceUrl}/classes/${id}`)
+        this.httpService.get(`${this.adminServiceUrl}/classe/${id}`)
       );
       return response.data;
     } catch (error) {
@@ -117,7 +117,7 @@ export class AdminService {
   async getClasses() {
     try {
       const response = await firstValueFrom(
-        this.httpService.get(`${this.adminServiceUrl}/classes`)
+        this.httpService.get(`${this.adminServiceUrl}/classe`)
       );
       return response.data;
     } catch (error) {
