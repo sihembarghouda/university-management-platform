@@ -17,6 +17,14 @@ async function bootstrap() {
   SwaggerModule.setup('api', app, document);
 
   const port = parseInt(process.env.PORT || process.env.APP_PORT || '3010', 10);
+  // Allow cross-origin requests from the frontend during development.
+  // Set FRONTEND_ORIGIN in the service's .env to override the default.
+  app.enableCors({
+    origin: process.env.FRONTEND_ORIGIN || 'http://localhost:3004',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    allowedHeaders: 'Content-Type, Authorization',
+    credentials: true,
+  });
   await app.listen(port);
   console.log(`🚀 Emploi-service listening on port ${port}`);
   console.log(`📘 Swagger UI: http://localhost:${port}/api`);
