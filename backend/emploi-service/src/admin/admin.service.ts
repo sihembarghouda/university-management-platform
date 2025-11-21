@@ -23,6 +23,21 @@ export class AdminService {
     }
   }
 
+  // Récupérer un étudiant par ID
+  async getEtudiant(id: number) {
+    try {
+      const response = await firstValueFrom(
+        this.httpService.get(`${this.adminServiceUrl}/etudiant/${id}`)
+      );
+      return response.data;
+    } catch (error) {
+      throw new HttpException(
+        `Étudiant avec ID ${id} introuvable`,
+        HttpStatus.NOT_FOUND
+      );
+    }
+  }
+
   // Récupérer tous les enseignants
   async getEnseignants() {
     try {

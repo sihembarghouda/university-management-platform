@@ -15,6 +15,7 @@ import AdministrativeDashboard from "./components/AdministrativeDashboard";
 import AdminPanel from "./components/AdminPanel";
 import ScheduleBuilder from "./components/ScheduleBuilder";
 import ScheduleViewer from "./components/ScheduleViewer";
+import MySchedule from "./components/MySchedule";
 import ConfirmEmailPage from "./components/ConfirmEmailPage";
 import ChangePasswordPage from "./components/ChangePasswordPage";
 import ForgotPasswordPage from "./components/ForgotPasswordPage";
@@ -124,6 +125,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={["directeur_departement"]}>
                   <ScheduleViewer />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/my-schedule"
+              element={
+                <ProtectedRoute allowedRoles={["etudiant", "enseignant", "directeur_departement"]}>
+                  <MySchedule />
                 </ProtectedRoute>
               }
             />

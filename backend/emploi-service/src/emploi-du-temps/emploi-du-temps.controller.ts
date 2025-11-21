@@ -1,6 +1,7 @@
-import { Controller, Post, Body, Get, Param } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Patch, Delete } from '@nestjs/common';
 import { EmploiDuTempsService } from './emploi-du-temps.service';
 import { CreateEmploiDto } from './dto/create-emploi.dto';
+import { UpdateEmploiDto } from './dto/update-emploi.dto';
 import { ApiTags, ApiResponse } from '@nestjs/swagger';
 import { EmploiDuTemps } from './entities/emploi-du-temps.entity';
 
@@ -21,6 +22,12 @@ export class EmploiDuTempsController {
     return this.service.getScheduleForClass(id, semestre);
   }
 
+  @Get('etudiant/:id/schedule/:semestre')
+  @ApiResponse({ status: 200, description: 'Planning complet pour un étudiant par semestre (basé sur sa classe)' })
+  async getScheduleForEtudiant(@Param('id') id: number, @Param('semestre') semestre: number) {
+    return this.service.getScheduleForEtudiant(id, semestre);
+  }
+
   @Get('enseignant/:id/schedule/:semestre')
   @ApiResponse({ status: 200, description: 'Planning complet pour un enseignant par semestre' })
   getScheduleForEnseignant(@Param('id') id: number, @Param('semestre') semestre: number) {
@@ -31,5 +38,17 @@ export class EmploiDuTempsController {
   @ApiResponse({ status: 200, description: 'Planning complet pour une salle par semestre' })
   getScheduleForSalle(@Param('id') id: number, @Param('semestre') semestre: number) {
     return this.service.getScheduleForSalle(id, semestre);
+  }
+
+  @Patch(':id')
+  @ApiResponse({ status: 200, description: 'Emploi du temps modifié', type: EmploiDuTemps })
+  update(@Param('id') id: number, @Body() dto: UpdateEmploiDto) {
+    return this.service.update(id, dto);
+  }
+
+  @Delete(':id')
+  @ApiResponse({ status: 200, description: 'Emploi du temps supprimé' })
+  remove(@Param('id') id: number) {
+    return this.service.remove(id);
   }
 }

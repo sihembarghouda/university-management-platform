@@ -139,6 +139,33 @@ export const scheduleService = {
     }
   },
 
+  // Récupérer l'emploi du temps d'un étudiant (basé sur sa classe)
+  async getScheduleByStudent(etudiantId, semestre = 1) {
+    try {
+      const response = await emploiAPI.get(`/emplois-du-temps/etudiant/${etudiantId}/schedule/${semestre}`);
+      return response.data;
+    } catch (error) {
+      console.error('Erreur lors du chargement de l\'emploi du temps:', error);
+      throw error;
+    }
+  },
+
+  // Récupérer MON emploi du temps (étudiant ou enseignant)
+  async getMySchedule(user, semestre = 1) {
+    try {
+      if (user.role === 'etudiant') {
+        return await this.getScheduleByStudent(user.id, semestre);
+      } else if (user.role === 'enseignant' || user.role === 'directeur_departement') {
+        return await this.getScheduleByTeacher(user.id, semestre);
+      } else {
+        throw new Error('Type d\'utilisateur non supporté pour l\'emploi du temps personnel');
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement de mon emploi du temps:', error);
+      throw error;
+    }
+  },
+
   // Récupérer l'emploi du temps d'une salle
   async getScheduleBySalle(salleId, semestre = 1) {
     try {
@@ -157,6 +184,28 @@ export const scheduleService = {
       return response.data;
     } catch (error) {
       console.error('Erreur lors du chargement des emplois du temps:', error);
+      throw error;
+    }
+  },
+
+  // Modifier un emploi du temps
+  async updateEmploi(emploiId, emploiData) {
+    try {
+      const response = await emploiAPI.patch(`/emplois-du-temps/${emploiId}`, emploiData);
+      return response.data;
+    } catch (error) {
+      console.error('Erreur lors de la modification de l\'emploi:', error);
+      throw error;
+    }
+  },
+
+  // Supprimer un emploi du temps
+  async deleteEmploi(emploiId) {
+    try {
+      const response = await emploiAPI.delete(`/emplois-du-temps/${emploiId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Erreur lors de la suppression de l\'emploi:', error);
       throw error;
     }
   }

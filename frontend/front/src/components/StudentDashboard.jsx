@@ -93,7 +93,7 @@ const StudentDashboard = () => {
 
   const handleAction = (action) => {
     const actions = {
-      viewSchedule: () => navigate("/emploi-du-temps"),
+      viewSchedule: () => navigate("/my-schedule"),
       viewGrades: () => navigate("/notes"),
       statistics: () => navigate("/statistiques"),
       messaging: () => navigate("/messagerie"),
