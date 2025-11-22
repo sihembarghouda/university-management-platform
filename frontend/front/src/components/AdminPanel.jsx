@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import "./AdminPanel.css";
+import { safeDisplay } from "../utils/display";
 
 const AdminPanel = () => {
   const { user, logout } = useAuth();
@@ -86,7 +87,8 @@ const AdminPanel = () => {
       nom: user.nom,
       email: user.email,
       telephone: user.telephone || "",
-      departement: user.departement || "",
+      // Si departement est un objet, on utilise son nom
+      departement: typeof user.departement === 'object' ? (user.departement?.nom || "") : (user.departement || ""),
       role: user.role,
     });
   };
@@ -259,7 +261,7 @@ const AdminPanel = () => {
                     <label>Département</label>
                     <input
                       type="text"
-                      value={newUser.departement}
+                      value={typeof newUser.departement === 'object' ? (newUser.departement?.nom || '') : (newUser.departement || '')}
                       onChange={(e) =>
                         setNewUser({ ...newUser, departement: e.target.value })
                       }
@@ -332,7 +334,7 @@ const AdminPanel = () => {
                   </td>
                   <td>{user.email}</td>
                   <td>{user.telephone || "-"}</td>
-                  <td>{user.departement || "-"}</td>
+                  <td>{safeDisplay(user.departement, "-")}</td>
                   <td>
                     <span className={`role-badge role-${user.role}`}>
                       {getRoleLabel(user.role)}

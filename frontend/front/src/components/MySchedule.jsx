@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { scheduleService } from '../services/scheduleService';
+// Import limité: on évite styles globaux potentiels de layout/sidebar
 import './ScheduleViewer.css';
 
 const MySchedule = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
   
   const [scheduleData, setScheduleData] = useState(null);
   const [semestre, setSemestre] = useState(1);
@@ -77,16 +76,6 @@ const MySchedule = () => {
     return grid;
   };
 
-  const handleBack = () => {
-    if (user.role === 'etudiant') {
-      navigate('/student-dashboard');
-    } else if (user.role === 'enseignant' || user.role === 'directeur_departement') {
-      navigate('/teacher-dashboard');
-    } else {
-      navigate('/');
-    }
-  };
-
   const getCourseStyle = (course) => {
     if (!course) return {};
     
@@ -112,43 +101,61 @@ const MySchedule = () => {
   const schedule = formatScheduleForGrid(scheduleData);
 
   return (
-    <div className="schedule-viewer">
-      <header className="schedule-header">
-        <div className="header-left">
-          <button 
-            className="back-btn"
-            onClick={handleBack}
-          >
-            ← Retour
-          </button>
-          <div>
-            <h1>📅 Mon Emploi du Temps</h1>
-            <p style={{ margin: 0, fontSize: '0.9rem', opacity: 0.8 }}>
-              {user?.prenom} {user?.nom} - {user?.role === 'etudiant' ? 'Étudiant' : 'Enseignant'}
-            </p>
-          </div>
+    <div className="my-schedule-page" style={{ padding: '24px', minHeight: '100vh', background: '#f5f5f5' }}>
+      {/* Header simplifié sans bouton retour */}
+      <div style={{ 
+        marginBottom: '24px', 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: '16px'
+      }}>
+        <div style={{ flex: 1 }}>
+          <h2 style={{ fontSize: '24px', fontWeight: '600', color: '#1f2937', margin: '0 0 4px 0' }}>Mon Emploi du Temps</h2>
+          <p style={{ margin: 0, fontSize: '13px', color: '#6b7280' }}>{user?.prenom} {user?.nom}</p>
         </div>
-        <div className="header-right">
-          <select
-            value={semestre}
-            onChange={(e) => setSemestre(parseInt(e.target.value))}
-            className="semestre-selector"
-          >
-            <option value={1}>Semestre 1</option>
-            <option value={2}>Semestre 2</option>
-          </select>
-        </div>
-      </header>
+        
+        <select
+          value={semestre}
+          onChange={(e) => setSemestre(parseInt(e.target.value))}
+          className="semestre-selector"
+          style={{
+            padding: '10px 16px',
+            fontSize: '14px',
+            fontWeight: '500',
+            color: '#1f2937',
+            backgroundColor: 'white',
+            border: '2px solid #e5e7eb',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            outline: 'none'
+          }}
+        >
+          <option value={1}>Semestre 1</option>
+          <option value={2}>Semestre 2</option>
+        </select>
+      </div>
 
       {error && (
-        <div className="error-message">
-          <p className="error-icon">ℹ️</p>
-          <p>{error}</p>
+        <div className="error-message" style={{
+          padding: '16px',
+          backgroundColor: '#fef2f2',
+          border: '1px solid #fecaca',
+          borderRadius: '8px',
+          marginBottom: '24px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px'
+        }}>
+          <p className="error-icon" style={{ fontSize: '24px', margin: 0 }}>ℹ️</p>
+          <p style={{ margin: 0, color: '#991b1b', fontSize: '14px' }}>{error}</p>
         </div>
       )}
 
       {!error && (
-        <div className="schedule-grid-container">
+        <div className="schedule-grid-container" style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <div className="schedule-grid">
             <div className="grid-header">
               <div className="time-header">Horaires</div>

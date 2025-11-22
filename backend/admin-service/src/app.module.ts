@@ -22,7 +22,7 @@ import { MessageModule } from './message/message.module';
       password: '0000',
       database: 'university_db_zei',
       autoLoadEntities: true,
-      synchronize: false,
+      synchronize: true,
     }),
 
     DepartementModule,

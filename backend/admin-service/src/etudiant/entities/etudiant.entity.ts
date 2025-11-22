@@ -32,6 +32,12 @@ export class Etudiant {
   mustChangePassword: boolean; // Force changement de mot de passe au 1er login
 
   @Column({ nullable: true })
+  resetToken: string; // Token pour réinitialisation de mot de passe
+
+  @Column({ nullable: true })
+  resetTokenExpires: Date; // Date d'expiration du token
+
+  @Column({ nullable: true })
   dateNaissance: Date;
 
   // Validation avant insertion/mise à jour

@@ -42,9 +42,6 @@ const DirectorDashboard = () => {
           { label: "Taux de réussite", value: "82%", icon: "📊", color: "primary" },
         ],
         actions: [
-          { label: "📅 Mon Emploi du Temps", description: "Consulter mon emploi du temps personnel", action: "mySchedule" },
-          { label: "📋 Créer emploi du temps", description: "Créer un nouvel emploi du temps avec drag & drop", action: "createSchedule" },
-          { label: "📅 Voir emplois existants", description: "Consulter et gérer les emplois existants", action: "viewSchedules" },
           { label: "👥 Gérer utilisateurs", description: "Administration des comptes utilisateurs", action: "manageUsers" },
           { label: "👨‍🏫 Gérer enseignants", description: "Gestion du personnel enseignant", action: "manageTeachers" },
           { label: "👨‍🎓 Gérer étudiants", description: "Gestion des étudiants du département", action: "manageStudents" },

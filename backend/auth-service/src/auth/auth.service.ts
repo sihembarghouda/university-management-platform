@@ -615,80 +615,234 @@ export class AuthService {
   async forgotPassword(email: string) {
     console.log('🔍 [ForgotPassword] Started for email:', email);
     
+    // 1️⃣ Check in utilisateur table (admin/administratif)
     const user = await this.usersRepo.findOne({ where: { email } });
-    if (!user) {
-      console.log('⚠️ [ForgotPassword] User not found for email:', email);
-      // Don't reveal if user exists for security
+    if (user) {
+      console.log('✅ [ForgotPassword] User found in utilisateur table:', user.email);
+
+      try {
+        // Generate our own reset token (not Firebase)
+        const token = randomBytes(32).toString('hex');
+        const expiresIn = new Date();
+        expiresIn.setHours(expiresIn.getHours() + 1); // Token expires in 1 hour
+
+        user.resetToken = token;
+        user.resetTokenExpires = expiresIn;
+        await this.usersRepo.save(user);
+        console.log('💾 [ForgotPassword] Token saved to database');
+
+        // Create direct link to OUR reset password page with OUR token
+        const resetUrl = `${process.env.FRONTEND_URL ?? 'http://localhost:3005'}/reset-password?email=${encodeURIComponent(email)}&token=${token}`;
+        console.log('🔗 [ForgotPassword] Reset URL:', resetUrl);
+        
+        // Send email with OUR link (not Firebase)
+        console.log('📧 [ForgotPassword] Sending email...');
+        
+        await this.mailerService.sendMail({
+          to: email,
+          subject: '🔐 Réinitialisation de votre mot de passe - ISETT',
+          html: `
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <meta charset="UTF-8">
+              <style>
+                body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; }
+                .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                .header { text-align: center; color: #667eea; margin-bottom: 30px; }
+                .button { display: inline-block; padding: 15px 30px; background-color: #667eea; color: #ffffff !important; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 20px 0; }
+                .footer { margin-top: 30px; text-align: center; color: #888; font-size: 12px; }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <div class="header">
+                  <h1>🔐 Réinitialisation de mot de passe</h1>
+                </div>
+                <p>Bonjour <strong>${user.prenom || user.nom}</strong>,</p>
+                <p>Vous avez demandé la réinitialisation de votre mot de passe pour votre compte ISETT.</p>
+                <p>Cliquez sur le bouton ci-dessous pour créer un nouveau mot de passe :</p>
+                <div style="text-align: center;">
+                  <a href="${resetUrl}" class="button">Réinitialiser mon mot de passe</a>
+                </div>
+                <p><strong>⏱️ Ce lien est valable pendant 1 heure.</strong></p>
+                <p>Si le bouton ne fonctionne pas, copiez et collez ce lien dans votre navigateur :</p>
+                <p style="word-break: break-all; color: #667eea;">${resetUrl}</p>
+                <p style="color: #e53e3e; margin-top: 20px;">⚠️ <strong>Vous n'avez pas demandé cette réinitialisation ?</strong><br>Ignorez simplement cet email. Votre mot de passe reste sécurisé.</p>
+                <div class="footer">
+                  <p><strong>Équipe ISETT</strong></p>
+                  <p>© ${new Date().getFullYear()} ISETT. Tous droits réservés.</p>
+                </div>
+              </div>
+            </body>
+            </html>
+          `,
+        });
+        
+        console.log('✅ [ForgotPassword] Email sent successfully!');
+      } catch (error) {
+        console.error('❌ [ForgotPassword] Error:', error);
+        throw error;
+      }
+
       return { message: 'Si cet email existe, un lien de réinitialisation a été envoyé' };
     }
 
-    console.log('✅ [ForgotPassword] User found:', user.email);
+    // 2️⃣ Check in etudiant table
+    const etudiantResult = await this.dataSource.query(
+      'SELECT * FROM etudiant WHERE email = $1 LIMIT 1',
+      [email]
+    );
+    
+    if (etudiantResult && etudiantResult.length > 0) {
+      const etudiant = etudiantResult[0];
+      console.log('✅ [ForgotPassword] User found in etudiant table:', etudiant.email);
 
-    try {
-      // Generate our own reset token (not Firebase)
-      const token = randomBytes(32).toString('hex');
-      const expiresIn = new Date();
-      expiresIn.setHours(expiresIn.getHours() + 1); // Token expires in 1 hour
+      try {
+        const token = randomBytes(32).toString('hex');
+        const expiresIn = new Date();
+        expiresIn.setHours(expiresIn.getHours() + 1);
 
-      user.resetToken = token;
-      user.resetTokenExpires = expiresIn;
-      await this.usersRepo.save(user);
-      console.log('💾 [ForgotPassword] Token saved to database');
+        await this.dataSource.query(
+          'UPDATE etudiant SET "resetToken" = $1, "resetTokenExpires" = $2 WHERE email = $3',
+          [token, expiresIn, email]
+        );
+        console.log('💾 [ForgotPassword] Token saved to etudiant table');
 
-      // Create direct link to OUR reset password page with OUR token
-      const resetUrl = `${process.env.FRONTEND_URL ?? 'http://localhost:3003'}/reset-password?email=${encodeURIComponent(email)}&token=${token}`;
-      console.log('🔗 [ForgotPassword] Reset URL:', resetUrl);
-      
-      // Send email with OUR link (not Firebase)
-      console.log('📧 [ForgotPassword] Sending email...');
-      
-      await this.mailerService.sendMail({
-        to: email,
-        subject: '🔐 Réinitialisation de votre mot de passe - ISETT',
-        html: `
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <meta charset="UTF-8">
-            <style>
-              body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; }
-              .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-              .header { text-align: center; color: #667eea; margin-bottom: 30px; }
-              .button { display: inline-block; padding: 15px 30px; background-color: #667eea; color: #ffffff !important; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 20px 0; }
-              .footer { margin-top: 30px; text-align: center; color: #888; font-size: 12px; }
-            </style>
-          </head>
-          <body>
-            <div class="container">
-              <div class="header">
-                <h1>🔐 Réinitialisation de mot de passe</h1>
+        const resetUrl = `${process.env.FRONTEND_URL ?? 'http://localhost:3005'}/reset-password?email=${encodeURIComponent(email)}&token=${token}`;
+        console.log('🔗 [ForgotPassword] Reset URL:', resetUrl);
+        
+        console.log('📧 [ForgotPassword] Sending email...');
+        
+        await this.mailerService.sendMail({
+          to: email,
+          subject: '🔐 Réinitialisation de votre mot de passe - ISETT',
+          html: `
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <meta charset="UTF-8">
+              <style>
+                body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; }
+                .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                .header { text-align: center; color: #667eea; margin-bottom: 30px; }
+                .button { display: inline-block; padding: 15px 30px; background-color: #667eea; color: #ffffff !important; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 20px 0; }
+                .footer { margin-top: 30px; text-align: center; color: #888; font-size: 12px; }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <div class="header">
+                  <h1>🔐 Réinitialisation de mot de passe</h1>
+                </div>
+                <p>Bonjour <strong>${etudiant.prenom || etudiant.nom}</strong>,</p>
+                <p>Vous avez demandé la réinitialisation de votre mot de passe pour votre compte ISETT.</p>
+                <p>Cliquez sur le bouton ci-dessous pour créer un nouveau mot de passe :</p>
+                <div style="text-align: center;">
+                  <a href="${resetUrl}" class="button">Réinitialiser mon mot de passe</a>
+                </div>
+                <p><strong>⏱️ Ce lien est valable pendant 1 heure.</strong></p>
+                <p>Si le bouton ne fonctionne pas, copiez et collez ce lien dans votre navigateur :</p>
+                <p style="word-break: break-all; color: #667eea;">${resetUrl}</p>
+                <p style="color: #e53e3e; margin-top: 20px;">⚠️ <strong>Vous n'avez pas demandé cette réinitialisation ?</strong><br>Ignorez simplement cet email. Votre mot de passe reste sécurisé.</p>
+                <div class="footer">
+                  <p><strong>Équipe ISETT</strong></p>
+                  <p>© ${new Date().getFullYear()} ISETT. Tous droits réservés.</p>
+                </div>
               </div>
-              <p>Bonjour <strong>${user.prenom || user.nom}</strong>,</p>
-              <p>Vous avez demandé la réinitialisation de votre mot de passe pour votre compte ISETT.</p>
-              <p>Cliquez sur le bouton ci-dessous pour créer un nouveau mot de passe :</p>
-              <div style="text-align: center;">
-                <a href="${resetUrl}" class="button">Réinitialiser mon mot de passe</a>
-              </div>
-              <p><strong>⏱️ Ce lien est valable pendant 1 heure.</strong></p>
-              <p>Si le bouton ne fonctionne pas, copiez et collez ce lien dans votre navigateur :</p>
-              <p style="word-break: break-all; color: #667eea;">${resetUrl}</p>
-              <p style="color: #e53e3e; margin-top: 20px;">⚠️ <strong>Vous n'avez pas demandé cette réinitialisation ?</strong><br>Ignorez simplement cet email. Votre mot de passe reste sécurisé.</p>
-              <div class="footer">
-                <p><strong>Équipe ISETT</strong></p>
-                <p>© ${new Date().getFullYear()} ISETT. Tous droits réservés.</p>
-              </div>
-            </div>
-          </body>
-          </html>
-        `,
-      });
-      
-      console.log('✅ [ForgotPassword] Email sent successfully!');
-    } catch (error) {
-      console.error('❌ [ForgotPassword] Error:', error);
-      throw error;
+            </body>
+            </html>
+          `,
+        });
+        
+        console.log('✅ [ForgotPassword] Email sent successfully!');
+      } catch (error) {
+        console.error('❌ [ForgotPassword] Error:', error);
+        throw error;
+      }
+
+      return { message: 'Si cet email existe, un lien de réinitialisation a été envoyé' };
     }
 
+    // 3️⃣ Check in enseignant table
+    const enseignantResult = await this.dataSource.query(
+      'SELECT * FROM enseignant WHERE email = $1 LIMIT 1',
+      [email]
+    );
+    
+    if (enseignantResult && enseignantResult.length > 0) {
+      const enseignant = enseignantResult[0];
+      console.log('✅ [ForgotPassword] User found in enseignant table:', enseignant.email);
+
+      try {
+        const token = randomBytes(32).toString('hex');
+        const expiresIn = new Date();
+        expiresIn.setHours(expiresIn.getHours() + 1);
+
+        await this.dataSource.query(
+          'UPDATE enseignant SET "resetToken" = $1, "resetTokenExpires" = $2 WHERE email = $3',
+          [token, expiresIn, email]
+        );
+        console.log('💾 [ForgotPassword] Token saved to enseignant table');
+
+        const resetUrl = `${process.env.FRONTEND_URL ?? 'http://localhost:3005'}/reset-password?email=${encodeURIComponent(email)}&token=${token}`;
+        console.log('🔗 [ForgotPassword] Reset URL:', resetUrl);
+        
+        console.log('📧 [ForgotPassword] Sending email...');
+        
+        await this.mailerService.sendMail({
+          to: email,
+          subject: '🔐 Réinitialisation de votre mot de passe - ISETT',
+          html: `
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <meta charset="UTF-8">
+              <style>
+                body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; }
+                .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                .header { text-align: center; color: #667eea; margin-bottom: 30px; }
+                .button { display: inline-block; padding: 15px 30px; background-color: #667eea; color: #ffffff !important; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 20px 0; }
+                .footer { margin-top: 30px; text-align: center; color: #888; font-size: 12px; }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <div class="header">
+                  <h1>🔐 Réinitialisation de mot de passe</h1>
+                </div>
+                <p>Bonjour <strong>${enseignant.prenom || enseignant.nom}</strong>,</p>
+                <p>Vous avez demandé la réinitialisation de votre mot de passe pour votre compte ISETT.</p>
+                <p>Cliquez sur le bouton ci-dessous pour créer un nouveau mot de passe :</p>
+                <div style="text-align: center;">
+                  <a href="${resetUrl}" class="button">Réinitialiser mon mot de passe</a>
+                </div>
+                <p><strong>⏱️ Ce lien est valable pendant 1 heure.</strong></p>
+                <p>Si le bouton ne fonctionne pas, copiez et collez ce lien dans votre navigateur :</p>
+                <p style="word-break: break-all; color: #667eea;">${resetUrl}</p>
+                <p style="color: #e53e3e; margin-top: 20px;">⚠️ <strong>Vous n'avez pas demandé cette réinitialisation ?</strong><br>Ignorez simplement cet email. Votre mot de passe reste sécurisé.</p>
+                <div class="footer">
+                  <p><strong>Équipe ISETT</strong></p>
+                  <p>© ${new Date().getFullYear()} ISETT. Tous droits réservés.</p>
+                </div>
+              </div>
+            </body>
+            </html>
+          `,
+        });
+        
+        console.log('✅ [ForgotPassword] Email sent successfully!');
+      } catch (error) {
+        console.error('❌ [ForgotPassword] Error:', error);
+        throw error;
+      }
+
+      return { message: 'Si cet email existe, un lien de réinitialisation a été envoyé' };
+    }
+
+    // ❌ No user found in any table
+    console.log('⚠️ [ForgotPassword] User not found for email:', email);
+    // Don't reveal if user exists for security
     return { message: 'Si cet email existe, un lien de réinitialisation a été envoyé' };
   }
 

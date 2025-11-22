@@ -38,6 +38,12 @@ export class Enseignant {
   @Column({ default: true })
   mustChangePassword: boolean; // Force changement de mot de passe au 1er login
 
+  @Column({ nullable: true })
+  resetToken: string; // Token pour réinitialisation de mot de passe
+
+  @Column({ nullable: true })
+  resetTokenExpires: Date; // Date d'expiration du token
+
   @Column({ default: 'enseignant' })
   role: string; // 'enseignant' ou 'directeur_departement'
 
