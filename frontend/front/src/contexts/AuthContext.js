@@ -27,7 +27,7 @@ export const AuthProvider = ({ children }) => {
 
     if (token && userData) {
       try {
-        const parsedUser = JSON.parse(userData);
+        const parsedUser = normalizeUser(JSON.parse(userData));
         setUser(parsedUser);
         setIsAuthenticated(true);
         axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
@@ -48,7 +48,7 @@ export const AuthProvider = ({ children }) => {
       };
       
       console.log('🧪 Mode test activé - Connexion automatique comme directeur');
-      setUser(testDirector);
+      setUser(normalizeUser(testDirector));
       setIsAuthenticated(true);
       localStorage.setItem("user", JSON.stringify(testDirector));
       localStorage.setItem("token", "test-token-director");
@@ -71,15 +71,16 @@ export const AuthProvider = ({ children }) => {
 
       if (response.data.success) {
         const { user: userData, token, type } = response.data;
+        const normalized = normalizeUser(userData);
 
         localStorage.setItem("token", token);
-        localStorage.setItem("user", JSON.stringify(userData));
+        localStorage.setItem("user", JSON.stringify(normalized));
 
-        setUser(userData);
+        setUser(normalized);
         setIsAuthenticated(true);
         axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
-        return { success: true, user: userData, type };
+        return { success: true, user: normalized, type };
       }
 
       return {
@@ -128,14 +129,15 @@ export const AuthProvider = ({ children }) => {
 
       if (response.data.success) {
         const { user: userData, token, type } = response.data;
+        const normalized = normalizeUser(userData);
 
         localStorage.setItem("token", token);
-        localStorage.setItem("user", JSON.stringify(userData));
-        setUser(userData);
+        localStorage.setItem("user", JSON.stringify(normalized));
+        setUser(normalized);
         setIsAuthenticated(true);
         axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
-        return { success: true, user: userData, type };
+        return { success: true, user: normalized, type };
       }
 
       return {
@@ -162,7 +164,7 @@ export const AuthProvider = ({ children }) => {
       });
 
       if (response.data.success) {
-        const updatedUser = response.data.user;
+        const updatedUser = normalizeUser(response.data.user);
         setUser(updatedUser);
         localStorage.setItem("user", JSON.stringify(updatedUser));
         return { success: true, user: updatedUser };
@@ -192,6 +194,32 @@ export const AuthProvider = ({ children }) => {
     changePassword,
     updateUser,
   };
+
+  // Normalisation pour garantir que departement / specialite ne cassent pas le rendu
+  function normalizeUser(u) {
+    if (!u || typeof u !== 'object') return u;
+    const copy = { ...u };
+    // departement peut être string ou objet { id, nom }
+    if (copy.departement && typeof copy.departement === 'object') {
+      if (typeof copy.departement.nom === 'string') {
+        copy.departement_nom = copy.departement.nom; // garder référence
+        copy.departementId = copy.departement.id;
+        copy.departement = copy.departement.nom; // flatten pour compatibilité
+      } else {
+        copy.departement = JSON.stringify(copy.departement);
+      }
+    }
+    if (copy.specialite && typeof copy.specialite === 'object') {
+      if (typeof copy.specialite.nom === 'string') {
+        copy.specialite_nom = copy.specialite.nom;
+        copy.specialiteId = copy.specialite.id;
+        copy.specialite = copy.specialite.nom;
+      } else {
+        copy.specialite = JSON.stringify(copy.specialite);
+      }
+    }
+    return copy;
+  }
 
   return (
     <AuthContext.Provider value={value}>
