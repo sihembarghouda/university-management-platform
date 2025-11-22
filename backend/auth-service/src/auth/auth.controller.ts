@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
@@ -55,5 +55,11 @@ export class AuthController {
   @Get('me')
   me() {
     return { ok: true };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('users/:role')
+  getUsersByRole(@Param('role') role: string) {
+    return this.auth.getUsersByRole(role);
   }
 }

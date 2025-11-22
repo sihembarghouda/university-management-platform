@@ -107,7 +107,7 @@ const TeacherDashboard = () => {
         alert("Ouverture des statistiques...");
         break;
       case "messaging":
-        alert("Ouverture de la messagerie...");
+        navigate('/messagerie');
         break;
       case "resources":
         alert("Ouverture des ressources pédagogiques...");

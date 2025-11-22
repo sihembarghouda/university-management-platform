@@ -163,27 +163,6 @@ const ScheduleViewer = () => {
     };
   };
 
-  const handleEditClick = (day, timeSlot, course) => {
-    setEditingCell({ day, timeSlot });
-    // Trouver les IDs correspondants
-    const enseignantName = typeof course.enseignant === 'object' 
-      ? `${course.enseignant.nom} ${course.enseignant.prenom}` 
-      : course.enseignant;
-    const salleName = typeof course.salle === 'object' ? course.salle.nom : course.salle;
-    const matiereName = typeof course.matiere === 'object' ? course.matiere.nom : course.matiere;
-    
-    const teacher = teachers.find(t => `${t.nom} ${t.prenom}` === enseignantName);
-    const room = rooms.find(r => r.nom === salleName);
-    const subject = subjects.find(s => s.nom === matiereName);
-    
-    setEditForm({
-      emploiId: course.id,
-      enseignantId: teacher?.id || '',
-      salleId: room?.id || '',
-      matiereId: subject?.id || ''
-    });
-  };
-
   const handleCancelEdit = () => {
     setEditingCell(null);
     setEditForm({ enseignantId: '', salleId: '', matiereId: '' });
@@ -205,26 +184,6 @@ const ScheduleViewer = () => {
     } catch (err) {
       console.error('Erreur lors de la modification:', err);
       alert('❌ Erreur lors de la modification: ' + (err.response?.data?.message || err.message));
-    }
-  };
-
-  const handleDeleteCourse = async (day, timeSlot, course) => {
-    const matiereName = typeof course.matiere === 'object' ? course.matiere.nom : course.matiere;
-    const enseignantName = typeof course.enseignant === 'object' 
-      ? `${course.enseignant.prenom} ${course.enseignant.nom}` 
-      : course.enseignant;
-    
-    if (!window.confirm(`Voulez-vous vraiment supprimer ce cours ?\n${matiereName} - ${enseignantName}`)) {
-      return;
-    }
-
-    try {
-      await scheduleService.deleteEmploi(course.id);
-      await loadSchedule(); // Recharger l'emploi du temps
-      alert('✅ Cours supprimé avec succès');
-    } catch (err) {
-      console.error('Erreur lors de la suppression:', err);
-      alert('❌ Erreur lors de la suppression: ' + (err.response?.data?.message || err.message));
     }
   };
 

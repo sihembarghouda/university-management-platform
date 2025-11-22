@@ -9,6 +9,7 @@ import { EnseignantModule } from './enseignant/enseignant.module';
 import { EtudiantModule } from './etudiant/etudiant.module';
 import { SalleModule } from './salle/salle.module';
 import { MatiereModule } from './matiere/matiere.module';
+import { MessageModule } from './message/message.module';
 
 @Module({
   imports: [
@@ -18,7 +19,7 @@ import { MatiereModule } from './matiere/matiere.module';
       host: 'localhost',
       port: 5432,
       username: 'postgres',
-      password: '0000',
+      password: '123456789',
       database: 'university_db',
       autoLoadEntities: true,
       synchronize: false,
@@ -32,6 +33,7 @@ import { MatiereModule } from './matiere/matiere.module';
     EtudiantModule,
     SalleModule,
     MatiereModule,
+    MessageModule,
   ],
 })
 export class AppModule {}

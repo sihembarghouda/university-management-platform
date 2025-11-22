@@ -42,9 +42,9 @@ const ScheduleBuilder = () => {
     loadData();
     
     // Check if we're in edit mode with params
+    const modeParam = searchParams.get('mode');
     const classIdParam = searchParams.get('classId');
     const semestreParam = searchParams.get('semestre');
-    const modeParam = searchParams.get('mode');
     
     if (classIdParam) {
       setSelectedClass(classIdParam);
@@ -128,7 +128,7 @@ const ScheduleBuilder = () => {
               if (enseignantData && enseignantData.nom && enseignantData.prenom) {
                 // Si c'est un objet avec nom et prenom
                 teacher = teachers.find(t => 
-                  t.nom === enseignantData.nom && t.prenom === enseignantData.prenom ||
+                  (t.nom === enseignantData.nom && t.prenom === enseignantData.prenom) ||
                   t.id === course.enseignantId
                 );
               } else if (typeof course.enseignant === 'string') {

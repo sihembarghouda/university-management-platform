@@ -2624,7 +2624,9 @@ ${classesData.map(c => `- ${c.nom}`).join('\n')}
       case 'matieres': return renderMatieres();
       case 'salles': return renderSalles();
       case 'reports': return renderReports();
-      case 'messages': return renderMessages();
+      case 'messages': 
+        navigate('/messagerie');
+        return null;
       case 'notifications': return renderNotifications();
       case 'profile': return renderProfile();
       default: return renderDashboard();

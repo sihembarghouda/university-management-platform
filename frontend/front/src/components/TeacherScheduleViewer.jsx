@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import scheduleService from '../services/scheduleService';
 import adminService from '../services/adminService';
@@ -24,15 +24,15 @@ const TeacherScheduleViewer = () => {
 
   useEffect(() => {
     loadTeachers();
-  }, []);
+  }, [loadTeachers]);
 
   useEffect(() => {
     if (selectedTeacher) {
       loadTeacherSchedule();
     }
-  }, [selectedTeacher, semestre]);
+  }, [selectedTeacher, semestre, loadTeacherSchedule]);
 
-  const loadTeachers = async () => {
+  const loadTeachers = useCallback(async () => {
     try {
       setLoading(true);
       const data = await adminService.getEnseignants();
@@ -49,9 +49,9 @@ const TeacherScheduleViewer = () => {
       setError('Impossible de charger la liste des enseignants');
       setLoading(false);
     }
-  };
+  }, [user]);
 
-  const loadTeacherSchedule = async () => {
+  const loadTeacherSchedule = useCallback(async () => {
     if (!selectedTeacher) {
       console.log('⚠️ No teacher selected');
       return;
@@ -90,7 +90,7 @@ const TeacherScheduleViewer = () => {
       setError('Erreur lors du chargement de l\'emploi du temps');
       setLoading(false);
     }
-  };
+  }, [selectedTeacher, semestre]);
 
   const formatScheduleForGrid = (scheduleData) => {
     console.log('🔍 formatScheduleForGrid called with:', scheduleData);

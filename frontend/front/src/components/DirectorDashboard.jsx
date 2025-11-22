@@ -48,6 +48,7 @@ const DirectorDashboard = () => {
           { label: "👥 Gérer utilisateurs", description: "Administration des comptes utilisateurs", action: "manageUsers" },
           { label: "👨‍🏫 Gérer enseignants", description: "Gestion du personnel enseignant", action: "manageTeachers" },
           { label: "👨‍🎓 Gérer étudiants", description: "Gestion des étudiants du département", action: "manageStudents" },
+          { label: "💬 Messagerie", description: "Messagerie interne avec enseignants et étudiants", action: "messaging" },
           { label: "📊 Rapports", description: "Générer des rapports département", action: "reports" },
           { label: "💰 Budget", description: "Suivi budgétaire du département", action: "budget" },
           { label: "📝 Évaluations", description: "Gestion des évaluations", action: "evaluations" },
@@ -88,6 +89,9 @@ const DirectorDashboard = () => {
         break;
       case "manageStudents":
         alert("Ouverture de la gestion des étudiants...");
+        break;
+      case "messaging":
+        navigate('/messagerie');
         break;
       case "reports":
         alert("Ouverture des rapports...");

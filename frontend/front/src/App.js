@@ -23,6 +23,7 @@ import ChangePasswordPage from "./components/ChangePasswordPage";
 import ForgotPasswordPage from "./components/ForgotPasswordPage";
 import ResetPasswordPage from "./components/ResetPasswordPage";
 import TestConnection from "./components/TestConnection";
+import Messaging from "./components/Messaging";
 import "./App.css";
 
 // Protected Route Component
@@ -151,6 +152,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={["directeur_departement"]}>
                   <RoomScheduleViewer />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/messagerie"
+              element={
+                <ProtectedRoute allowedRoles={["etudiant", "enseignant", "administratif", "directeur_departement"]}>
+                  <Messaging />
                 </ProtectedRoute>
               }
             />

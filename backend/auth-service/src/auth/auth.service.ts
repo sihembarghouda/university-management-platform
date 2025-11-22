@@ -752,4 +752,11 @@ export class AuthService {
 
     return { message: 'Mot de passe réinitialisé avec succès' };
   }
+
+  async getUsersByRole(role: string) {
+    return this.usersRepo.find({
+      where: { role },
+      select: ['id', 'nom', 'prenom', 'email', 'role'],
+    });
+  }
 }
