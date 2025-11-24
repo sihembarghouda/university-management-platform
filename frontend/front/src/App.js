@@ -179,7 +179,7 @@ function App() {
               <Route
                 path="/messagerie"
                 element={
-                  <ProtectedRoute allowedRoles={["etudiant"]}>
+                  <ProtectedRoute allowedRoles={["etudiant", "enseignant", "directeur_departement"]}>
                     <MessagingPage />
                   </ProtectedRoute>
                 }
