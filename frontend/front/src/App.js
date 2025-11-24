@@ -18,6 +18,7 @@ import ScheduleBuilder from "./components/ScheduleBuilder";
 import ScheduleViewer from "./components/ScheduleViewer";
 import MySchedule from "./components/MySchedule";
 import TeacherScheduleViewer from "./components/TeacherScheduleViewer";
+import NotificationsPage from "./components/NotificationsPage";
 import RoomScheduleViewer from "./components/RoomScheduleViewer";
 import ConfirmEmailPage from "./components/ConfirmEmailPage";
 import ChangePasswordPage from "./components/ChangePasswordPage";
@@ -165,6 +166,14 @@ function App() {
                 element={
                   <ProtectedRoute allowedRoles={["etudiant"]}>
                     <ScolaritePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/notifications"
+                element={
+                  <ProtectedRoute allowedRoles={["etudiant"]}>
+                    <NotificationsPage />
                   </ProtectedRoute>
                 }
               />

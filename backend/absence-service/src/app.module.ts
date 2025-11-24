@@ -22,8 +22,8 @@ import { AttendanceModule } from './attendance/attendance.module';
       host: process.env.DB_HOST || 'localhost',
       port: parseInt(process.env.DB_PORT || '5432', 10),
       username: process.env.DB_USERNAME || 'postgres',
-      password: process.env.DB_PASSWORD || '0000',
-      database: process.env.DB_NAME || 'university_db_2',
+      password: process.env.DB_PASSWORD || '123456789',
+      database: process.env.DB_NAME || 'university_db',
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       // IMPORTANT: synchronize must be false for production-like environments.
       // It was enabled during local testing to create the schema quickly.

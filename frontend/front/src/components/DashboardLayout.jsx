@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation, Outlet } from "react-router-dom";
 import { useAuth } from '../contexts/AuthContext';
 import NotificationPanel from './NotificationPanel';
@@ -11,7 +11,8 @@ import {
   Library, 
   FileText, 
   User, 
-  LogOut 
+  LogOut,
+  Bell
 } from 'lucide-react';
 
 const DashboardLayout = () => {
@@ -20,6 +21,33 @@ const DashboardLayout = () => {
   const { user, logout } = useAuth();
   
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (user?.role === 'etudiant') {
+      loadNotifications();
+      // Actualiser les notifications toutes les 30 secondes
+      const interval = setInterval(loadNotifications, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [user]);
+
+  // Charger les notifications depuis l'API
+  const loadNotifications = async () => {
+    if (!user?.id || user?.role !== 'etudiant') return;
+
+    try {
+      const response = await fetch(`http://localhost:3002/api/notifications/etudiant/${user.id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setNotifications(data);
+        setUnreadCount(data.filter(n => !n.isRead).length);
+      }
+    } catch (error) {
+      console.error('Erreur chargement notifications:', error);
+    }
+  };
 
   const services = [
     { 
@@ -63,6 +91,13 @@ const DashboardLayout = () => {
       description: "Documents administratifs",
       icon: FileText,
       path: "/scolarite"
+    },
+    { 
+      label: "Notifications", 
+      description: "Alertes et messages",
+      icon: Bell,
+      path: "/notifications",
+      badge: user?.role === 'etudiant' ? (unreadCount > 0 ? unreadCount : null) : null
     },
   ];
 
