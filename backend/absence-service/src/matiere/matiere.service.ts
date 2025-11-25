@@ -17,10 +17,23 @@ export class MatiereService {
   }
 
   async isTeacherOfMatiere(matiereId: number, enseignantId: number): Promise<boolean> {
-    const matiere = await this.matiereRepo.findOne({ where: { id: matiereId } });
-    if (!matiere) throw new NotFoundException(`Matière #${matiereId} non trouvée`);
-    // 'enseignants' is eager-loaded in the entity, so the relation should be present
-    const enseignants = (matiere as any).enseignants || [];
-    return enseignants.some((e: any) => Number(e.id) === Number(enseignantId));
+    console.log(`Vérification si l'enseignant ${enseignantId} enseigne la matière ${matiereId}`);
+    
+    const matiere = await this.matiereRepo.findOne({ 
+      where: { id: matiereId },
+      relations: ['enseignants']
+    });
+    
+    if (!matiere) {
+      console.log(`Matière ${matiereId} non trouvée`);
+      throw new NotFoundException(`Matière #${matiereId} non trouvée`);
+    }
+    
+    console.log(`Matière trouvée: ${matiere.nom}, enseignants:`, matiere.enseignants?.map(e => ({ id: e.id, nom: e.nom })));
+    
+    const isTeacher = matiere.enseignants?.some((e: any) => Number(e.id) === Number(enseignantId)) || false;
+    console.log(`Résultat: ${isTeacher}`);
+    
+    return isTeacher;
   }
 }

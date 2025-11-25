@@ -1,6 +1,9 @@
 import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { Absence, StatutAbsence } from './absence.entity';
 import { CreateAbsenceDto } from './dto/create-absence.dto';
 import { UpdateAbsenceDto } from './dto/update-absence.dto';
@@ -11,6 +14,7 @@ export class AbsenceService {
   constructor(
     @InjectRepository(Absence)
     private readonly absenceRepo: Repository<Absence>,
+    private readonly httpService: HttpService,
   ) {}
 
   async create(createDto: CreateAbsenceDto): Promise<Absence> {
@@ -21,10 +25,70 @@ export class AbsenceService {
       absence.rattrapage = false;
     }
     try {
-      return await this.absenceRepo.save(absence);
+      const savedAbsence = await this.absenceRepo.save(absence);
+
+      // Send notification if it's a teacher absence
+      if ((savedAbsence as any).sujet === 'enseignant') {
+        try {
+          await this.sendAbsenceNotification(savedAbsence);
+        } catch (notifError) {
+          console.error('Erreur lors de l\'envoi de la notification d\'absence:', notifError);
+          // Don't fail the absence creation if notification fails
+        }
+      }
+
+      return savedAbsence;
     } catch (err) {
       console.error('AbsenceService.create error:', err);
       throw new InternalServerErrorException('Erreur lors de la création de l\'absence');
+    }
+  }
+
+  private async sendAbsenceNotification(absence: any): Promise<void> {
+    try {
+      // Get teacher info from admin-service
+      const enseignantResponse = await firstValueFrom(
+        this.httpService.get(`http://localhost:3002/enseignant/${absence.enseignantId}`)
+      );
+      const enseignant = enseignantResponse.data;
+
+      // Get matiere info
+      const matiereResponse = await firstValueFrom(
+        this.httpService.get(`http://localhost:3002/matiere/${absence.matiereId}`)
+      );
+      const matiere = matiereResponse.data;
+
+      // Get director for the department
+      const directeursResponse = await firstValueFrom(
+        this.httpService.get('http://localhost:3002/enseignant')
+      );
+      const directeurs = directeursResponse.data.filter(
+        (e: any) => e.departement?.id === enseignant.departement?.id && e.role === 'directeur_departement'
+      );
+
+      if (directeurs.length === 0) {
+        console.warn('Aucun directeur trouvé pour le département:', enseignant.departement?.id);
+        return;
+      }
+
+      const directeur = directeurs[0];
+
+      // Send notification
+      await firstValueFrom(
+        this.httpService.post('http://localhost:3002/api/notifications/absence-enseignant', {
+          enseignantId: absence.enseignantId,
+          directeurId: directeur.id,
+          enseignantNom: `${enseignant.nom} ${enseignant.prenom}`,
+          matiereNom: matiere.nom,
+          date: absence.dateAbsence,
+          motif: absence.motif || 'Absence enseignante',
+        })
+      );
+
+      console.log('🔔 Notification d\'absence envoyée au directeur:', directeur.nom);
+    } catch (error) {
+      console.error('Erreur dans sendAbsenceNotification:', error);
+      throw error;
     }
   }
 

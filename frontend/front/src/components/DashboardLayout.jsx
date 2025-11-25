@@ -12,7 +12,8 @@ import {
   FileText, 
   User, 
   LogOut,
-  Bell
+  Bell,
+  UserX
 } from 'lucide-react';
 
 const DashboardLayout = () => {
@@ -99,6 +100,12 @@ const DashboardLayout = () => {
       path: "/notifications",
       badge: user?.role === 'etudiant' ? (unreadCount > 0 ? unreadCount : null) : null
     },
+    { 
+      label: "Suivi des absences", 
+      description: "Consulter mes absences",
+      icon: UserX,
+      path: "/absences"
+    },
   ];
 
   const handleServiceClick = (service) => {
@@ -184,6 +191,7 @@ const DashboardLayout = () => {
                 {location.pathname === '/bibliotheque' && 'Bibliothèque'}
                 {location.pathname === '/scolarite' && 'Scolarité'}
                 {location.pathname === '/student-profile' && 'Mon Profil'}
+                {location.pathname === '/absences' && 'Absence'}
               </h2>
               <p className="text-sm text-gray-500">
                 {location.pathname === '/student-dashboard' && 'Bienvenue dans votre espace étudiant'}
@@ -194,6 +202,7 @@ const DashboardLayout = () => {
                 {location.pathname === '/bibliotheque' && 'Accédez aux ressources pédagogiques'}
                 {location.pathname === '/scolarite' && 'Consultez vos documents administratifs'}
                 {location.pathname === '/student-profile' && 'Gérez vos informations personnelles'}
+                {location.pathname === '/absences' && 'Gérez vos demandes d\'absence'}
               </p>
             </div>
             <div className="flex items-center gap-4">

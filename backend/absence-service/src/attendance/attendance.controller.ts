@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Delete,
   Body,
   Param,
   Query,
@@ -61,6 +62,32 @@ export class AttendanceController {
     );
   }
 
+  // GET /api/attendance/teacher/:enseignantId
+  @Get('attendance/teacher/:enseignantId')
+  async getTeacherAbsences(
+    @Param('enseignantId') enseignantId: string,
+  ) {
+    return this.attendanceService.getTeacherAbsences(Number(enseignantId));
+  }
+
+  // DELETE /api/attendance/:absenceId
+  @Delete('attendance/:absenceId')
+  async deleteAbsence(
+    @Param('absenceId') absenceId: string,
+    @Request() req,
+  ) {
+    const enseignantId = req.user?.id || req.user?.userId || req.user?.sub;
+    return this.attendanceService.deleteAbsence(Number(absenceId), enseignantId);
+  }
+
+  // GET /api/attendance/student/:etudiantId
+  @Get('attendance/student/:etudiantId')
+  async getStudentAbsences(
+    @Param('etudiantId') etudiantId: string,
+  ) {
+    return this.attendanceService.getStudentAbsences(Number(etudiantId));
+  }
+
   // GET /api/attendance/student/:etudiantId/stats
   @Get('attendance/student/:etudiantId/stats')
   async getStudentStats(
@@ -71,5 +98,21 @@ export class AttendanceController {
       Number(etudiantId),
       Number(semestre),
     );
+  }
+
+  // GET /api/attendance/student/:etudiantId/history
+  @Get('attendance/student/:etudiantId/history')
+  async getStudentAbsenceHistory(
+    @Param('etudiantId') etudiantId: string,
+  ) {
+    return this.attendanceService.getStudentAbsenceHistory(Number(etudiantId));
+  }
+
+  // GET /api/attendance/student/:etudiantId/eliminations
+  @Get('attendance/student/:etudiantId/eliminations')
+  async getStudentEliminations(
+    @Param('etudiantId') etudiantId: string,
+  ) {
+    return this.attendanceService.getStudentEliminations(Number(etudiantId));
   }
 }

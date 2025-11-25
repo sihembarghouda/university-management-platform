@@ -5,11 +5,17 @@ export class Notification {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ name: 'etudiant_id' })
+  @Column({ name: 'etudiant_id', nullable: true })
   etudiantId: number;
 
+  @Column({ name: 'enseignant_id', nullable: true })
+  enseignantId: number;
+
+  @Column({ name: 'directeur_id', nullable: true })
+  directeurId: number;
+
   @Column()
-  type: string; // 'absence', 'note', 'message', etc.
+  type: string; // 'absence', 'note', 'message', 'absence_enseignant', etc.
 
   @Column()
   titre: string;

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Bell, X, Check, Trash2 } from "lucide-react";
 import { useAuth } from '../contexts/AuthContext';
 
-const NotificationsPage = () => {
+const TeacherNotificationsPage = () => {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -16,7 +16,7 @@ const NotificationsPage = () => {
     if (!user?.id) return;
 
     try {
-      const response = await fetch(`http://localhost:3002/api/notifications/etudiant/${user.id}`);
+      const response = await fetch(`http://localhost:3002/api/notifications/enseignant/${user.id}`);
       if (response.ok) {
         const data = await response.json();
         setNotifications(data);
@@ -45,7 +45,7 @@ const NotificationsPage = () => {
     if (!user?.id) return;
 
     try {
-      await fetch(`http://localhost:3002/api/notifications/etudiant/${user.id}/read-all`, {
+      await fetch(`http://localhost:3002/api/notifications/enseignant/${user.id}/read-all`, {
         method: 'PATCH'
       });
       loadNotifications();
@@ -62,7 +62,7 @@ const NotificationsPage = () => {
       const response = await fetch(`http://localhost:3002/api/notifications/${notificationId}`, {
         method: 'DELETE'
       });
-      
+
       if (response.ok) {
         loadNotifications(); // Recharger les notifications
       } else {
@@ -91,7 +91,7 @@ const NotificationsPage = () => {
           <h1 className="text-3xl font-bold text-gray-800">Notifications</h1>
           <p className="text-gray-600 mt-1">Vos alertes et messages importants</p>
         </div>
-        {notifications.filter(n => !n.isRead).length > 0 && (
+        {notifications.filter(n => !n.lu).length > 0 && (
           <button
             onClick={markAllAsRead}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -118,7 +118,7 @@ const NotificationsPage = () => {
             <div
               key={notification.id}
               className={`bg-white rounded-xl shadow-sm border p-6 transition-all ${
-                !notification.isRead
+                !notification.lu
                   ? 'border-blue-200 bg-blue-50'
                   : 'border-gray-200'
               }`}
@@ -126,20 +126,20 @@ const NotificationsPage = () => {
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    {!notification.isRead && (
+                    {!notification.lu && (
                       <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
                     )}
                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      notification.type === 'elimination'
-                        ? 'bg-red-100 text-red-700'
-                        : notification.type === 'avertissement'
+                      notification.type === 'message'
+                        ? 'bg-green-100 text-green-700'
+                        : notification.type === 'alerte'
                         ? 'bg-orange-100 text-orange-700'
                         : 'bg-blue-100 text-blue-700'
                     }`}>
-                      {notification.type === 'elimination' && '🚨 Élimination'}
-                      {notification.type === 'avertissement' && '⚠️ Avertissement'}
-                      {notification.type === 'absence' && '📝 Absence'}
-                      {!['elimination', 'avertissement', 'absence'].includes(notification.type) && '📬 Info'}
+                      {notification.type === 'message' && '💬 Message'}
+                      {notification.type === 'alerte' && '⚠️ Alerte'}
+                      {notification.type === 'info' && '📬 Info'}
+                      {!['message', 'alerte', 'info'].includes(notification.type) && '📬 Info'}
                     </span>
                     <span className="text-sm text-gray-500">
                       {new Date(notification.createdAt).toLocaleDateString('fr-FR')} à{' '}
@@ -162,7 +162,7 @@ const NotificationsPage = () => {
                   )}
                 </div>
                 <div className="flex items-center gap-2 ml-4">
-                  {!notification.isRead && (
+                  {!notification.lu && (
                     <button
                       onClick={() => markAsRead(notification.id)}
                       className="flex items-center gap-1 px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
@@ -187,4 +187,4 @@ const NotificationsPage = () => {
   );
 };
 
-export default NotificationsPage;
+export default TeacherNotificationsPage;

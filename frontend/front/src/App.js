@@ -178,6 +178,14 @@ function App() {
                 }
               />
               <Route
+                path="/absences"
+                element={
+                  <ProtectedRoute allowedRoles={["etudiant"]}>
+                    <StudentDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/student-profile"
                 element={
                   <ProtectedRoute allowedRoles={["etudiant"]}>

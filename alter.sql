@@ -1,0 +1,1 @@
+ALTER TABLE absence ALTER COLUMN "etudiantId" DROP NOT NULL;

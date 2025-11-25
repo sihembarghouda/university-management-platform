@@ -80,6 +80,48 @@ export const notificationService = {
       throw error;
     }
   },
+
+  // Méthodes pour les enseignants
+  async getNotificationsEnseignant(enseignantId) {
+    try {
+      console.log('📬 Récupération notifications pour enseignant:', enseignantId);
+      const response = await axios.get(
+        `${API_URL}/api/notifications/enseignant/${enseignantId}`,
+        { headers: getAuthHeader() }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('❌ Erreur récupération notifications enseignant:', error);
+      throw error;
+    }
+  },
+
+  async getUnreadCountEnseignant(enseignantId) {
+    try {
+      const response = await axios.get(
+        `${API_URL}/api/notifications/enseignant/${enseignantId}/count`,
+        { headers: getAuthHeader() }
+      );
+      return response.data.count;
+    } catch (error) {
+      console.error('❌ Erreur récupération count enseignant:', error);
+      return 0;
+    }
+  },
+
+  async markAllAsReadEnseignant(enseignantId) {
+    try {
+      const response = await axios.patch(
+        `${API_URL}/api/notifications/enseignant/${enseignantId}/read-all`,
+        {},
+        { headers: getAuthHeader() }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('❌ Erreur marquage toutes comme lues enseignant:', error);
+      throw error;
+    }
+  },
 };
 
 export default notificationService;

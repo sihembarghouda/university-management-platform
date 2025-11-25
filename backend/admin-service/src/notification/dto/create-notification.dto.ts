@@ -1,9 +1,17 @@
 import { IsNotEmpty, IsNumber, IsString, IsOptional } from 'class-validator';
 
 export class CreateNotificationDto {
-  @IsNotEmpty()
+  @IsOptional()
   @IsNumber()
-  etudiantId: number;
+  etudiantId?: number;
+
+  @IsOptional()
+  @IsNumber()
+  enseignantId?: number;
+
+  @IsOptional()
+  @IsNumber()
+  directeurId?: number;
 
   @IsNotEmpty()
   @IsString()

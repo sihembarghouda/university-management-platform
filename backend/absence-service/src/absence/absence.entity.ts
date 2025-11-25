@@ -19,8 +19,8 @@ export class Absence {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
-  etudiantId: number;
+  @Column({ nullable: true })
+  etudiantId?: number;
 
   @Column({ nullable: true })
   etudiantNom?: string;

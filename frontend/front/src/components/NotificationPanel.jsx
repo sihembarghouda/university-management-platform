@@ -18,15 +18,24 @@ const NotificationPanel = () => {
       return;
     }
     
-    console.log('🔔 NotificationPanel: Chargement notifications pour user.id:', user.id);
+    console.log('🔔 NotificationPanel: Chargement notifications pour user.id:', user.id, 'role:', user.role);
     
     try {
       setLoading(true);
-      const data = await notificationService.getNotifications(user.id);
+      
+      let data, count;
+      if (user.role === 'enseignant' || user.role === 'directeur_departement') {
+        data = await notificationService.getNotificationsEnseignant(user.id);
+        count = await notificationService.getUnreadCountEnseignant(user.id);
+      } else {
+        // Par défaut, considérer comme étudiant
+        data = await notificationService.getNotifications(user.id);
+        count = await notificationService.getUnreadCount(user.id);
+      }
+      
       console.log('📬 NotificationPanel: Notifications reçues:', data);
       setNotifications(data);
       
-      const count = await notificationService.getUnreadCount(user.id);
       console.log('🔢 NotificationPanel: Nombre non lues:', count);
       setUnreadCount(count);
     } catch (error) {
@@ -172,7 +181,7 @@ const NotificationPanel = () => {
               </div>
             ) : (
               <div className="divide-y divide-gray-100">
-                {notifications.map((notification) => (
+                {notifications.slice(0, 3).map((notification) => (
                   <div
                     key={notification.id}
                     className={`p-4 hover:bg-gray-50 transition-colors cursor-pointer ${
@@ -263,7 +272,7 @@ const NotificationPanel = () => {
               <button
                 onClick={() => {
                   setIsOpen(false);
-                  // Optionnel: naviguer vers une page dédiée aux notifications
+                  window.location.href = 'http://localhost:3004/notifications';
                 }}
                 className="text-sm text-blue-600 hover:text-blue-800 font-medium"
               >

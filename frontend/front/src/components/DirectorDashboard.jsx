@@ -26,6 +26,8 @@ const DirectorDashboard = () => {
   const [editingProfile, setEditingProfile] = useState(false);
   const [activeNav, setActiveNav] = useState("dashboard");
   const [userDepartement, setUserDepartement] = useState(null);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [profileData, setProfileData] = useState({
     prenom: user?.prenom || "",
     nom: user?.nom || "",
@@ -36,9 +38,17 @@ const DirectorDashboard = () => {
   useEffect(() => {
     console.log('🚀 DirectorDashboard useEffect déclenché');
     console.log('👤 Utilisateur:', user);
+    console.log('🔐 Rôle utilisateur:', user?.role);
+    console.log('🏢 Département utilisateur:', user?.departement);
     loadDashboardData();
     loadUserDepartement();
+    loadNotifications();
   }, [user]);
+
+  // Force re-render when dashboardData changes
+  useEffect(() => {
+    console.log('📊 DashboardData mis à jour, re-render forcé:', dashboardData);
+  }, [dashboardData]);
 
   const loadUserDepartement = async () => {
     // Essayer d'abord user.departement.id, puis user.departementId
@@ -60,8 +70,29 @@ const DirectorDashboard = () => {
     }
   };
 
+  const loadNotifications = async () => {
+    if (!user?.id) return;
+
+    try {
+      console.log('🔔 Chargement notifications pour directeur:', user.id);
+      const response = await fetch(`http://localhost:3002/api/notifications/directeur/${user.id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setNotifications(data);
+        setUnreadNotifications(data.filter(n => !n.lu).length);
+        console.log('📬 Notifications directeur chargées:', data.length);
+        console.log('📋 Détails notifications:', data);
+      } else {
+        console.error('❌ Réponse HTTP erreur:', response.status, response.statusText);
+      }
+    } catch (error) {
+      console.error('❌ Erreur chargement notifications directeur:', error);
+    }
+  };
+
   const loadDashboardData = async () => {
     console.log('🔄 Chargement des données du dashboard directeur...');
+    console.log('📊 État actuel dashboardData:', dashboardData);
     
     try {
       const stats = await directorService.getStats();
@@ -87,6 +118,7 @@ const DirectorDashboard = () => {
       };
       
       setDashboardData(data);
+      console.log('🔄 Dashboard data mis à jour avec vraies données:', data);
       setLoading(false);
     } catch (error) {
       console.error('❌ Erreur lors du chargement des stats:', error);
@@ -190,6 +222,21 @@ const DirectorDashboard = () => {
     } catch (error) {
       console.error("Erreur lors de la mise à jour du profil:", error);
       // Erreur silencieuse
+    }
+  };
+
+  const markNotificationAsRead = async (notificationId) => {
+    try {
+      const token = localStorage.getItem('token');
+      await fetch(`http://localhost:3002/api/notifications/${notificationId}/read`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      loadNotifications(); // Recharger les notifications
+    } catch (error) {
+      console.error('Erreur marquage notification:', error);
     }
   };
 
@@ -381,7 +428,7 @@ const DirectorDashboard = () => {
                 {activeNav === 'profile' && 'Mon Profil'}
               </h2>
               <p className="text-sm text-gray-500">
-                {activeNav === 'dashboard' && 'Espace Directeur de Département'}
+                {activeNav === 'dashboard' && `Espace Directeur de Département - ${user?.role || 'Rôle inconnu'}`}
                 {activeNav === 'mySchedule' && 'Consultez votre planning hebdomadaire'}
                 {activeNav === 'messaging' && 'Gérez vos messages et communications'}
                 {activeNav === 'teacherSchedules' && 'Consultez les emplois du temps des enseignants'}
@@ -403,9 +450,18 @@ const DirectorDashboard = () => {
         <main className="p-8">
           {activeNav === 'dashboard' && (
             <>
+              {/* Loading State */}
+              {loading && (
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                  <span className="ml-3 text-gray-600">Chargement des données...</span>
+                </div>
+              )}
+
               {/* Stats Grid with Charts */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {dashboardData?.stats.map((stat, index) => {
+              {!loading && dashboardData?.stats && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                  {dashboardData.stats.map((stat, index) => {
               // Calculer un pourcentage pour la barre de progression (simule une tendance)
               const percentage = stat.label === "Taux de réussite" 
                 ? parseInt(stat.value) 
@@ -470,11 +526,77 @@ const DirectorDashboard = () => {
                 </div>
               );
             })}
-          </div>
-            </>
-          )}
+                </div>
+              )}
 
-          {activeNav === 'mySchedule' && <MySchedule />}
+              {/* Notifications Section */}
+              {!loading && (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                    <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+                      <User size={16} className="text-red-600" />
+                    </div>
+                    Absences des Enseignants
+                    <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded ml-2">
+                      ✅ Section visible
+                    </span>
+                  </h3>
+                  {unreadNotifications > 0 && (
+                    <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                      {unreadNotifications} nouvelle{unreadNotifications > 1 ? 's' : ''}
+                    </span>
+                  )}
+                </div>
+
+                {notifications.filter(n => n.type === 'absence_enseignant').length === 0 ? (
+                  <div className="text-center py-8">
+                    <User className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                    <p className="text-gray-500">Aucune absence signalée</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {notifications
+                      .filter(n => n.type === 'absence_enseignant')
+                      .slice(0, 5)
+                      .map((notification) => (
+                        <div
+                          key={notification.id}
+                          className={`p-4 rounded-lg border-l-4 ${
+                            !notification.lu
+                              ? 'bg-red-50 border-red-500'
+                              : 'bg-gray-50 border-gray-300'
+                          }`}
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <h4 className="font-semibold text-gray-800">
+                                {notification.titre}
+                              </h4>
+                              <p className="text-sm text-gray-600 mt-1">
+                                {notification.message}
+                              </p>
+                              <p className="text-xs text-gray-500 mt-2">
+                                {new Date(notification.createdAt).toLocaleDateString('fr-FR')}
+                              </p>
+                            </div>
+                            {!notification.lu && (
+                              <button
+                                onClick={() => markNotificationAsRead(notification.id)}
+                                className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                              >
+                                Marquer comme lu
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
+              )}
+            </>
+          )}          {activeNav === 'mySchedule' && <MySchedule />}
           {activeNav === 'messaging' && <MessagingPage />}
           {activeNav === 'teacherSchedules' && <TeacherScheduleViewer />}
           {activeNav === 'roomSchedules' && <RoomScheduleViewer />}

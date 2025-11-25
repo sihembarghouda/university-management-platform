@@ -65,7 +65,9 @@ export class MatiereService {
   }
 
   findAll() {
-    return this.matiereRepo.find();
+    return this.matiereRepo.find({
+      relations: ['enseignants']
+    });
   }
 
   findOne(id: number) {
